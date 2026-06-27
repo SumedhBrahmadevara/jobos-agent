@@ -8,12 +8,19 @@ import streamlit as st
 from apply import build_pack
 from jobos.config import DATA_DIR, APPLICATIONS_DIR, ensure_dirs
 from jobos.llm_client import llm_is_available
-from jobos.io import write_json, write_text, load_yaml
+from jobos.io import load_yaml
 from jobos.schemas import TrackerRecord
 from jobos.tracker import save_application, get_applications, update_status
 from jobos.agents.claim_verifier_agent import verify_answer
 from jobos.agents.compliance_agent import classify_field
 from jobos.profile_manager import save_yaml_safe
+from jobos.application_bundle import generate_bundle
+from jobos.docx_generator import (
+    CV_PLACEHOLDERS, CL_PLACEHOLDERS,
+    validate_template, render_cv_docx, render_cover_letter_docx,
+    TemplateNotFoundError, MissingPlaceholdersError,
+)
+from jobos.document_generator import load_cv_master
 
 _BACKUPS_DIR = DATA_DIR / "backups"
 
@@ -34,6 +41,15 @@ if "app_id" not in st.session_state:
     st.session_state["app_id"] = None
 if "approved_data" not in st.session_state:
     st.session_state["approved_data"] = {}
+if "bundle" not in st.session_state:
+    st.session_state["bundle"] = None
+if "docx_cv_path" not in st.session_state:
+    st.session_state["docx_cv_path"] = None
+if "docx_cl_path" not in st.session_state:
+    st.session_state["docx_cl_path"] = None
+
+_LOCAL_TEMPLATES_DIR = DATA_DIR / "local_templates"
+_LOCAL_TEMPLATES_DIR.mkdir(parents=True, exist_ok=True)
 
 # ── Sidebar: recent applications ──────────────────────────────────────────────
 
@@ -71,7 +87,7 @@ with st.sidebar:
 # ── Main tabs ─────────────────────────────────────────────────────────────────
 
 is_llm = llm_is_available()
-tab_apply, tab_profile = st.tabs(["🚀 Apply", "📋 Profile & Claims"])
+tab_apply, tab_profile, tab_exports = st.tabs(["🚀 Apply", "📋 Profile & Claims", "📄 Templates & Exports"])
 
 # ══════════════════════════════════════════════════════════════════════════════
 # Tab 1: Apply
@@ -145,21 +161,22 @@ with tab_apply:
             .replace("/", "-")
         )
         out_dir = APPLICATIONS_DIR / f"{timestamp}_{slug}"
-        out_dir.mkdir(parents=True, exist_ok=True)
 
-        write_json(out_dir / "application_pack.json", pack.model_dump())
+        approved_data = (
+            load_yaml(DATA_DIR / "approved_claims.yaml")
+            if (DATA_DIR / "approved_claims.yaml").exists()
+            else {}
+        )
+        profile_data = (
+            load_yaml(DATA_DIR / "profile.yaml")
+            if (DATA_DIR / "profile.yaml").exists()
+            else {}
+        )
+        adjacent_claims_data = approved_data.get("adjacent_claims", {})
 
-        md = [f"# {pack.parsed_job.company} — {pack.parsed_job.role_title}"]
-        md += [f"\nFit: **{pack.fit_score.overall_score}/100 ({pack.fit_score.category})**"]
-        md += [f"\n**Strategy:** {pack.fit_score.application_strategy}\n"]
-        md += ["\n## Answers"]
-        for ans in pack.answers:
-            md += [
-                f"\n### {ans.question}",
-                ans.answer,
-                f"\n_Confidence: {ans.confidence} | Review needed: {ans.needs_human_review}_",
-            ]
-        write_text(out_dir / "application_pack.md", "\n".join(md))
+        bundle = generate_bundle(
+            pack, out_dir, profile_data, adjacent_claims_data, approved_claims_full=approved_data
+        )
 
         record = TrackerRecord(
             company=pack.parsed_job.company,
@@ -172,16 +189,11 @@ with tab_apply:
         )
         app_id = save_application(record)
 
-        approved_data = (
-            load_yaml(DATA_DIR / "approved_claims.yaml")
-            if (DATA_DIR / "approved_claims.yaml").exists()
-            else {}
-        )
-
         st.session_state["pack"] = pack
         st.session_state["out_dir_name"] = out_dir.name
         st.session_state["app_id"] = app_id
         st.session_state["approved_data"] = approved_data
+        st.session_state["bundle"] = bundle
 
     # ── Results display ────────────────────────────────────────────────────────
 
@@ -393,16 +405,56 @@ with tab_apply:
                         + (" — manual review required." if field_risk.requires_manual_approval else "")
                     )
 
-        # ── Save confirmation ──────────────────────────────────────────────────
+        # ── Generated Bundle ───────────────────────────────────────────────────
 
         st.divider()
         out_dir_name = st.session_state["out_dir_name"]
         app_id = st.session_state["app_id"]
+        bundle_result = st.session_state.get("bundle")
+
         if out_dir_name:
+            st.subheader("Generated Bundle")
             st.success(
                 f"Saved to `outputs/applications/{out_dir_name}` · "
                 f"Tracker ID: {app_id}"
             )
+
+            if bundle_result:
+                if bundle_result.high_risk_warnings:
+                    st.error("⚠️ High-risk claim warnings — review before submitting:")
+                    for w in bundle_result.high_risk_warnings:
+                        st.error(f"- {w}")
+
+                if bundle_result.adjacent_claims_flagged:
+                    with st.expander("🟡 Adjacent claims flagged in this application"):
+                        for item in bundle_result.adjacent_claims_flagged:
+                            st.warning(item)
+
+                col_b1, col_b2 = st.columns(2)
+                with col_b1:
+                    st.write("**Documents created:**")
+                    for label, path_str in [
+                        ("📄 Tailored CV", bundle_result.tailored_cv_path),
+                        ("✉️ Cover Letter", bundle_result.cover_letter_path),
+                        ("📝 Application Answers", bundle_result.answers_path),
+                    ]:
+                        p = Path(path_str)
+                        rel = p.relative_to(Path(bundle_result.out_dir).parent.parent) if p.exists() else p.name
+                        st.write(f"{label}: `{rel}`")
+                with col_b2:
+                    st.write("**Data files:**")
+                    for label, path_str in [
+                        ("📦 Pack JSON", bundle_result.pack_json_path),
+                        ("📋 Pack Summary", bundle_result.pack_md_path),
+                    ]:
+                        p = Path(path_str)
+                        rel = p.relative_to(Path(bundle_result.out_dir).parent.parent) if p.exists() else p.name
+                        st.write(f"{label}: `{rel}`")
+
+                st.caption(
+                    "All files are local only and excluded from Git. "
+                    "Review tailored_cv.md and cover_letter.md carefully before submitting."
+                )
 
 # ══════════════════════════════════════════════════════════════════════════════
 # Tab 2: Profile & Claims
@@ -578,3 +630,159 @@ with tab_profile:
                 st.rerun()
             except ValueError as exc:
                 st.error(f"Invalid YAML — file not saved. Error: {exc}")
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Tab 3: Templates & Exports
+# ══════════════════════════════════════════════════════════════════════════════
+
+with tab_exports:
+    st.title("Templates & Exports")
+    st.caption(
+        "Upload your own .docx CV and cover letter templates with {{ token }} placeholders. "
+        "JobOS will fill them with approved content and write DOCX files alongside the markdown bundle."
+    )
+    st.info(
+        "Templates are saved locally to `data/local_templates/` and are excluded from Git. "
+        "Generated DOCX files are written into the same `outputs/applications/` folder as the markdown bundle."
+    )
+
+    col_cv_up, col_cl_up = st.columns(2)
+
+    _cv_template_path = _LOCAL_TEMPLATES_DIR / "cv_template.docx"
+    _cl_template_path = _LOCAL_TEMPLATES_DIR / "cover_letter_template.docx"
+
+    # ── CV template upload ─────────────────────────────────────────────────────
+
+    with col_cv_up:
+        st.subheader("CV Template")
+        st.caption(
+            "Must contain these placeholders:\n"
+            + "  ".join(f"`{{{{ {p} }}}}`" for p in CV_PLACEHOLDERS)
+        )
+
+        uploaded_cv = st.file_uploader(
+            "Upload CV .docx template",
+            type=["docx"],
+            key="cv_template_upload",
+        )
+        if uploaded_cv is not None:
+            _cv_template_path.write_bytes(uploaded_cv.read())
+            st.success(f"Saved to `data/local_templates/cv_template.docx`")
+
+        if _cv_template_path.exists():
+            cv_valid, cv_missing = validate_template(_cv_template_path, CV_PLACEHOLDERS)
+            if cv_valid:
+                st.success("CV template: all required placeholders found.")
+            else:
+                st.error(
+                    "CV template missing placeholders: "
+                    + ", ".join(f"`{{{{ {p} }}}}`" for p in cv_missing)
+                )
+        else:
+            st.caption("No CV template uploaded yet.")
+
+    # ── Cover letter template upload ───────────────────────────────────────────
+
+    with col_cl_up:
+        st.subheader("Cover Letter Template")
+        st.caption(
+            "Must contain these placeholders:\n"
+            + "  ".join(f"`{{{{ {p} }}}}`" for p in CL_PLACEHOLDERS)
+        )
+
+        uploaded_cl = st.file_uploader(
+            "Upload cover letter .docx template",
+            type=["docx"],
+            key="cl_template_upload",
+        )
+        if uploaded_cl is not None:
+            _cl_template_path.write_bytes(uploaded_cl.read())
+            st.success(f"Saved to `data/local_templates/cover_letter_template.docx`")
+
+        if _cl_template_path.exists():
+            cl_valid, cl_missing = validate_template(_cl_template_path, CL_PLACEHOLDERS)
+            if cl_valid:
+                st.success("Cover letter template: all required placeholders found.")
+            else:
+                st.error(
+                    "Cover letter template missing placeholders: "
+                    + ", ".join(f"`{{{{ {p} }}}}`" for p in cl_missing)
+                )
+        else:
+            st.caption("No cover letter template uploaded yet.")
+
+    st.divider()
+
+    # ── Generate DOCX outputs ──────────────────────────────────────────────────
+
+    st.subheader("Generate DOCX Outputs")
+
+    bundle_result = st.session_state.get("bundle")
+    pack_for_docx = st.session_state.get("pack")
+
+    templates_ready = _cv_template_path.exists() and _cl_template_path.exists()
+    pack_ready = pack_for_docx is not None and bundle_result is not None
+
+    if not pack_ready:
+        st.info("Generate an application pack in the Apply tab first, then come back here to export DOCX.")
+    elif not templates_ready:
+        st.warning("Upload both templates above before generating DOCX outputs.")
+    else:
+        cv_ok, _ = validate_template(_cv_template_path, CV_PLACEHOLDERS)
+        cl_ok, _ = validate_template(_cl_template_path, CL_PLACEHOLDERS)
+
+        if not cv_ok or not cl_ok:
+            st.error("Fix placeholder errors in the templates above before generating.")
+        else:
+            if st.button("Generate DOCX Outputs", type="primary"):
+                try:
+                    cv_master_data = load_cv_master()
+                    approved_data_for_docx = st.session_state.get("approved_data", {})
+                    profile_data_for_docx = (
+                        load_yaml(DATA_DIR / "profile.yaml")
+                        if (DATA_DIR / "profile.yaml").exists()
+                        else {}
+                    )
+
+                    bundle_out_dir = Path(bundle_result.out_dir)
+                    cv_docx_out = bundle_out_dir / "tailored_cv.docx"
+                    cl_docx_out = bundle_out_dir / "cover_letter.docx"
+
+                    with st.spinner("Rendering DOCX files…"):
+                        render_cv_docx(
+                            _cv_template_path,
+                            pack_for_docx,
+                            profile_data_for_docx,
+                            cv_master_data,
+                            cv_docx_out,
+                        )
+                        render_cover_letter_docx(
+                            _cl_template_path,
+                            pack_for_docx,
+                            profile_data_for_docx,
+                            cv_master_data,
+                            cl_docx_out,
+                        )
+
+                    st.session_state["docx_cv_path"] = str(cv_docx_out)
+                    st.session_state["docx_cl_path"] = str(cl_docx_out)
+                    st.success("DOCX files generated.")
+                except (TemplateNotFoundError, MissingPlaceholdersError) as exc:
+                    st.error(f"Template error: {exc}")
+                except Exception as exc:
+                    st.error(f"Generation failed: {exc}")
+
+    docx_cv_path = st.session_state.get("docx_cv_path")
+    docx_cl_path = st.session_state.get("docx_cl_path")
+
+    if docx_cv_path or docx_cl_path:
+        st.divider()
+        st.subheader("Generated DOCX Files")
+        st.caption(
+            "These files are local only and excluded from Git. "
+            "Review every claim before using in a real application."
+        )
+        if docx_cv_path and Path(docx_cv_path).exists():
+            st.write(f"📄 **Tailored CV:** `{docx_cv_path}`")
+        if docx_cl_path and Path(docx_cl_path).exists():
+            st.write(f"✉️ **Cover Letter:** `{docx_cl_path}`")

@@ -30,14 +30,20 @@ outputs/
 # Profile backups contain personal data and are local only
 data/backups/
 
+# User-uploaded DOCX templates may contain personal contact details
+data/local_templates/
+data/uploads/
+
 # OS/editor
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
 
-# Documents with personal data
+# Generated or personal documents — do not commit
 *.pdf
+*.rtf
+# DOCX files may contain personal CV/CL templates with private contact details.
+# The markdown templates in data/templates/ ARE committed; local .docx conversions are not.
 *.docx
 *.doc
-*.rtf

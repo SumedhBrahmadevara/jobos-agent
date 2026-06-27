@@ -1,0 +1,145 @@
+# CV Master — Sumedh Brahmadevara
+# Source of truth for all approved CV content used by JobOS document generator.
+# Do not invent experience. Do not add phone number, home address or passwords.
+# Every bullet must have id, text and tags. Every skill must have id, text and tags.
+
+meta:
+  name: "Sumedh Brahmadevara"
+  location: "London, UK"
+  email: "ADD_YOUR_EMAIL"
+  linkedin: "ADD_YOUR_LINKEDIN"
+
+# ── Experience ─────────────────────────────────────────────────────────────────
+experience:
+  - id: "ROLE001"
+    employer: "Premier Miton Investors"
+    title: "Credit Analyst"
+    start: "September 2025"
+    end: "Present"
+    sectors:
+      - "Consumer"
+      - "Retailers"
+      - "Grocers"
+      - "Apparel"
+      - "Food & Beverage"
+      - "Leisure"
+      - "Travel"
+      - "Airlines"
+      - "Airports"
+      - "Business Services"
+    bullets:
+      - id: "B001"
+        text: "Conduct deep fundamental research across 60+ consumer-sector issuers, analysing business models, competitive positioning, sector dynamics, management strategy and key credit risks."
+        tags: ["fundamental_research", "consumer", "public_markets", "credit", "research", "investment"]
+        always_include: true
+      - id: "B002"
+        text: "Build forward-looking financial models covering revenue drivers, margins, free cash flow, leverage, liquidity, lease-adjusted metrics and maturity profiles."
+        tags: ["financial_modelling", "modelling", "investment", "analytical", "credit"]
+      - id: "B003"
+        text: "Monitor approximately 300 IG/HY issuers, tracking earnings, corporate developments, cash-bond spreads, curves, liquidity and event risk."
+        tags: ["monitoring", "earnings", "credit", "public_markets", "investment", "bond"]
+      - id: "B004"
+        text: "Analyse 15–20 new primary bond issues per month using issuer curves, peer comparables, ratings, maturity profiles and new issue concession analysis."
+        tags: ["primary_market", "bond", "credit", "investment", "analytical"]
+      - id: "B005"
+        text: "Attend investor calls and synthesise commentary from company management, rating agencies and equity analysts to form independent investment views."
+        tags: ["communication", "investment", "research", "earnings", "writing"]
+      - id: "B006"
+        text: "Build internal tools for relative value analysis, new issue pricing, issuer monitoring and investment workflow improvement."
+        tags: ["analytical", "investment", "data", "workflow", "python_careful"]
+
+# ── Education ──────────────────────────────────────────────────────────────────
+education:
+  - id: "EDU001"
+    institution: "University of Cambridge"
+    college: "Emmanuel College"
+    degree: "BA Economics"
+    grade: "2.1"
+    years: "2022–2025"
+    dissertation:
+      title: "Housing Affordability in the Face of Gentrification: An Economic Inquiry"
+      prize: "Adam Smith Prize for Best Dissertation in Part IIB Economics"
+      methods:
+        - "Panel data"
+        - "Spatial econometrics"
+        - "Fixed effects models"
+        - "Spatial Durbin model"
+        - "Data harmonisation"
+        - "MSOA-level housing and economic analysis"
+      tags: ["data", "analytical", "econometrics", "quant_adjacent"]
+
+# ── Skills ─────────────────────────────────────────────────────────────────────
+# adjacent: true means this skill goes in the adjacent framing section, not the main list.
+skills:
+  - id: "SK001"
+    text: "Fundamental credit research"
+    tags: ["credit", "fundamental_research", "public_markets", "investment"]
+  - id: "SK002"
+    text: "Public markets analysis"
+    tags: ["public_markets", "investment", "fundamental_research"]
+  - id: "SK003"
+    text: "Financial modelling"
+    tags: ["financial_modelling", "modelling", "investment", "analytical"]
+  - id: "SK004"
+    text: "Bond valuation and new-issue pricing"
+    tags: ["bond", "primary_market", "credit", "investment"]
+  - id: "SK005"
+    text: "Relative value analysis"
+    tags: ["investment", "analytical", "credit", "public_markets"]
+  - id: "SK006"
+    text: "Earnings analysis and issuer monitoring"
+    tags: ["earnings", "monitoring", "research", "investment"]
+  - id: "SK007"
+    text: "Management commentary synthesis"
+    tags: ["communication", "research", "investment", "writing"]
+  - id: "SK008"
+    text: "Balance sheet and cash-flow analysis"
+    tags: ["financial_modelling", "credit", "analytical", "investment"]
+  - id: "SK009"
+    text: "Downside-risk and covenant analysis"
+    tags: ["credit", "investment", "analytical"]
+  - id: "SK010"
+    text: "Consumer, airlines and business-services sector research"
+    tags: ["consumer", "sector_research", "fundamental_research", "research"]
+  - id: "SK011"
+    text: "Credit spread, curve and primary market analysis"
+    tags: ["credit", "bond", "primary_market", "investment"]
+  - id: "SK012"
+    text: "Quantitative and econometric methods (Cambridge dissertation)"
+    tags: ["data", "analytical", "econometrics", "quant_adjacent"]
+  - id: "SK013"
+    text: "Python — building workflow automation capability"
+    tags: ["python_careful"]
+    adjacent: true
+    adjacent_note: "Frame as building capability, not production engineering. Use: 'building Python capability for investment workflow tools'."
+
+# ── Cover letter paragraphs ────────────────────────────────────────────────────
+# Format strings: {role_title}, {company}, {application_strategy} are substituted at render time.
+cover_letter_paragraphs:
+  opening:
+    - id: "CL_OPEN_001"
+      text: "I am writing to apply for the {role_title} position at {company}."
+      tags: ["general"]
+
+  body_credit:
+    - id: "CL_BODY_CREDIT_001"
+      text: "In my current role as Credit Analyst at Premier Miton Investors, I have developed a rigorous investment-research discipline grounded in deep fundamental analysis across consumer, retail, travel and business-services sectors. My work combines financial modelling, earnings analysis, primary market pricing and management commentary synthesis — giving me a technical foundation directly transferable to this role."
+      tags: ["credit", "public_markets", "investment", "fundamental_research"]
+    - id: "CL_BODY_CREDIT_002"
+      text: "In my current role as Credit Analyst at Premier Miton Investors, I combine fundamental research across 60+ issuers with forward-looking financial modelling, primary market analysis and systematic monitoring of approximately 300 IG/HY issuers. This breadth of public-markets exposure — spanning credit risk, earnings analysis, relative value and new-issue pricing — provides a strong foundation for the analytical demands of this role."
+      tags: ["credit", "financial_modelling", "earnings", "monitoring", "investment", "bond"]
+
+  body_cambridge:
+    - id: "CL_CAMBRIDGE_001"
+      text: "My analytical rigour is underpinned by a Cambridge Economics degree, where my dissertation — *Housing Affordability in the Face of Gentrification* — was awarded the Adam Smith Prize for Best Dissertation. The project required panel data analysis, spatial econometrics and extensive data harmonisation, developing exactly the quantitative discipline that informs rigorous investment research."
+      tags: ["analytical", "data", "econometrics", "general"]
+
+  body_motivation:
+    - id: "CL_MOTIV_001"
+      text: "{application_strategy} I am attracted to roles where fundamental judgement, intellectual honesty and clear investment conviction are the primary performance measures. [ADD FIRM-SPECIFIC MOTIVATION — why {company} specifically: strategy, investment mandate, team culture, or specific fund thesis.]"
+      tags: ["general"]
+
+  closing:
+    - id: "CL_CLOSE_001"
+      text: "I would welcome the opportunity to discuss how my background in public-markets credit research and investment analysis might contribute to {company}. Thank you for considering my application, and I look forward to hearing from you."
+      tags: ["general"]
