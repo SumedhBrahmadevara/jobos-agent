@@ -31,6 +31,12 @@ def test_pipeline_returns_complete_pack(tmp_path):
     assert isinstance(pack.risks_to_review, list)
     assert pack.cv_angle
     assert len(pack.cover_letter_outline) > 0
+    # CV tailoring must be present and populated
+    assert pack.cv_tailor is not None
+    assert pack.cv_tailor.positioning_angle
+    assert pack.cv_tailor.cv_summary_draft
+    assert len(pack.cv_tailor.bullets_to_emphasise) > 0
+    assert len(pack.cv_tailor.unsupported_claims) > 0
 
 
 def test_pipeline_produces_one_answer_per_question(tmp_path):
@@ -100,3 +106,4 @@ def test_pipeline_pydantic_schema_validates_pack(tmp_path):
     restored = ApplicationPack.model_validate(dumped)
     assert restored.parsed_job.company == pack.parsed_job.company
     assert restored.fit_score.overall_score == pack.fit_score.overall_score
+    assert restored.cv_tailor.positioning_angle == pack.cv_tailor.positioning_angle

@@ -16,6 +16,7 @@ from jobos.agents.job_parser_agent import parse_job
 from jobos.agents.fit_scorer_agent import score_fit
 from jobos.agents.answer_drafter_agent import draft_answer
 from jobos.agents.claim_verifier_agent import verify_answer
+from jobos.agents.cv_tailor_agent import tailor_cv
 
 app = typer.Typer(help="JobOS Application Agent MVP")
 console = Console()
@@ -33,6 +34,7 @@ def build_pack(job_file: Path, questions_file: Path | None) -> ApplicationPack:
 
     parsed = parse_job(job_description)
     fit = score_fit(parsed, profile)
+    cv_tailor = tailor_cv(parsed, fit, profile, approved)
 
     answers = []
     risks = list(parsed.red_flags)
@@ -68,6 +70,7 @@ def build_pack(job_file: Path, questions_file: Path | None) -> ApplicationPack:
         answers=answers,
         cv_angle=cv_angle,
         cover_letter_outline=cover_letter_outline,
+        cv_tailor=cv_tailor,
         risks_to_review=sorted(set(risks)),
     )
 
@@ -90,6 +93,7 @@ def run(
 
     write_json(out_dir / "application_pack.json", pack.model_dump())
 
+    ct = pack.cv_tailor
     md = [
         f"# Application Pack: {pack.parsed_job.company} — {pack.parsed_job.role_title}",
         "",
@@ -97,6 +101,30 @@ def run(
         "",
         "## Strategy",
         pack.fit_score.application_strategy,
+        "",
+        "## CV Tailoring Suggestions",
+        f"**Positioning:** {ct.positioning_angle}",
+        "",
+        "### CV Summary Draft",
+        "> " + ct.cv_summary_draft,
+        "",
+        "### Bullets to Emphasise",
+        *[f"- {x}" for x in ct.bullets_to_emphasise],
+        "",
+        "### Bullets to De-emphasise",
+        *[f"- {x}" for x in ct.bullets_to_de_emphasise],
+        "",
+        "### Suggested Skill Order",
+        *[f"- {x}" for x in ct.reordered_skills],
+        "",
+        "### Approved Claims (use verbatim)",
+        *[f"- {x}" for x in ct.approved_claims_usable],
+        "",
+        "### Adjacent Experience (frame carefully)",
+        *[f"- {x}" for x in ct.adjacent_experience],
+        "",
+        "### Do NOT Claim",
+        *[f"- {x}" for x in ct.unsupported_claims],
         "",
         "## Strengths",
         *[f"- {x}" for x in pack.fit_score.strengths],

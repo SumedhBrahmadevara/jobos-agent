@@ -37,12 +37,25 @@ class DraftAnswer(BaseModel):
     review_reason: str | None = None
 
 
+class CVTailorSuggestions(BaseModel):
+    positioning_angle: str = Field(description="Overall CV positioning angle for this role.")
+    cv_summary_draft: str = Field(description="Short CV profile/summary paragraph tailored to this role.")
+    bullets_to_emphasise: list[str] = Field(default_factory=list, description="Existing experience bullets to lead with or highlight.")
+    bullets_to_de_emphasise: list[str] = Field(default_factory=list, description="Bullets to move down, reframe, or omit for this role.")
+    reordered_skills: list[str] = Field(default_factory=list, description="Suggested skill ordering for this role.")
+    risks_and_gaps: list[str] = Field(default_factory=list, description="Gaps or risks to avoid overstating on the CV.")
+    approved_claims_usable: list[str] = Field(default_factory=list, description="Approved claims that can be used directly for this role.")
+    adjacent_experience: list[str] = Field(default_factory=list, description="Real experience that must be framed carefully — not overstated.")
+    unsupported_claims: list[str] = Field(default_factory=list, description="Statements that must NOT appear on the CV for this role.")
+
+
 class ApplicationPack(BaseModel):
     parsed_job: ParsedJob
     fit_score: FitScore
     answers: list[DraftAnswer]
     cv_angle: str
     cover_letter_outline: list[str]
+    cv_tailor: CVTailorSuggestions
     risks_to_review: list[str] = Field(default_factory=list)
 
 

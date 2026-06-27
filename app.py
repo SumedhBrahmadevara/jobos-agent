@@ -219,6 +219,60 @@ if pack is not None:
         for line in pack.cover_letter_outline:
             st.write(f"- {line}")
 
+    # ── CV Tailoring Suggestions ──────────────────────────────────────────────
+
+    st.divider()
+    st.subheader("CV Tailoring Suggestions")
+    st.caption(
+        "Suggestions only — no CV files have been modified. "
+        "Review all draft language before using."
+    )
+
+    ct = pack.cv_tailor
+
+    st.write("**Positioning angle:**", ct.positioning_angle)
+
+    with st.expander("CV summary / profile draft", expanded=True):
+        st.info(ct.cv_summary_draft)
+        st.caption("Draft only — verify every claim against approved_claims.yaml before using.")
+
+    col_em, col_de = st.columns(2)
+    with col_em:
+        st.write("**Emphasise**")
+        for b in ct.bullets_to_emphasise:
+            st.write(f"- {b}")
+    with col_de:
+        st.write("**De-emphasise / reframe**")
+        for b in ct.bullets_to_de_emphasise:
+            st.write(f"- {b}")
+
+    if ct.reordered_skills:
+        with st.expander("Suggested skill order for this role"):
+            for i, skill in enumerate(ct.reordered_skills, 1):
+                st.write(f"{i}. {skill}")
+
+    col_ap, col_adj, col_no = st.columns(3)
+    with col_ap:
+        st.write("**✅ Approved claims**")
+        st.caption("Use verbatim.")
+        for c in ct.approved_claims_usable:
+            st.success(c)
+    with col_adj:
+        st.write("**🟡 Adjacent experience**")
+        st.caption("Frame carefully — do not overstate.")
+        for c in ct.adjacent_experience:
+            st.warning(c)
+    with col_no:
+        st.write("**🚨 Do NOT claim**")
+        st.caption("Must not appear on CV.")
+        for c in ct.unsupported_claims:
+            st.error(c)
+
+    if ct.risks_and_gaps:
+        with st.expander("Risks and gaps to address"):
+            for r in ct.risks_and_gaps:
+                st.write(f"- {r}")
+
     # ── Draft answers ─────────────────────────────────────────────────────────
 
     st.divider()
