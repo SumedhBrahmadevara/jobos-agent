@@ -19,13 +19,18 @@ GENERIC_PHRASES = [
 ]
 
 
-def _offline_verify(answer: str, approved_claims: dict, forbidden_claims: dict) -> VerificationResult:
+def _offline_verify(answer: str, approved_claims: dict, forbidden_claims: dict | list) -> VerificationResult:
     lower = answer.lower()
     unsupported: list[str] = []
     exaggerated: list[str] = []
     generic = [phrase for phrase in GENERIC_PHRASES if phrase in lower]
 
-    for claim in forbidden_claims.get("forbidden_claims", []):
+    # Accept either the raw list or the full YAML dict (legacy call-site).
+    _forbidden_list: list = (
+        forbidden_claims if isinstance(forbidden_claims, list)
+        else forbidden_claims.get("forbidden_claims", [])
+    )
+    for claim in _forbidden_list:
         if claim.lower() in lower:
             exaggerated.append(claim)
 
@@ -50,7 +55,7 @@ def _offline_verify(answer: str, approved_claims: dict, forbidden_claims: dict) 
     )
 
 
-def verify_answer(answer: str, approved_claims: dict, forbidden_claims: dict) -> VerificationResult:
+def verify_answer(answer: str, approved_claims: dict, forbidden_claims: dict | list) -> VerificationResult:
     user_prompt = f"""
 Answer to verify:
 {answer}

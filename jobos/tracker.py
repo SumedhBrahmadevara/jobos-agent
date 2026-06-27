@@ -51,6 +51,40 @@ def init_db(db_path: Path = DB_PATH) -> None:
         conn.close()
 
 
+def get_applications(limit: int = 20, db_path: Path = DB_PATH) -> list[dict]:
+    """Return the most recent application records, newest first."""
+    if not db_path.exists():
+        return []
+    conn = sqlite3.connect(db_path)
+    try:
+        conn.row_factory = sqlite3.Row
+        cur = conn.execute(
+            """
+            SELECT id, company, role_title, fit_score, category, status, created_at
+            FROM applications
+            ORDER BY created_at DESC
+            LIMIT ?
+            """,
+            (limit,),
+        )
+        return [dict(row) for row in cur.fetchall()]
+    finally:
+        conn.close()
+
+
+def update_status(app_id: int, status: str, db_path: Path = DB_PATH) -> None:
+    """Update the status field of an application record."""
+    conn = sqlite3.connect(db_path)
+    try:
+        conn.execute(
+            "UPDATE applications SET status = ? WHERE id = ?",
+            (status, app_id),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
 def save_application(record: TrackerRecord, db_path: Path = DB_PATH) -> int:
     init_db(db_path)
     created_at = datetime.now(timezone.utc).isoformat()
