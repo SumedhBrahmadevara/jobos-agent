@@ -9,7 +9,7 @@ from rich.panel import Panel
 
 from jobos.config import DATA_DIR, APPLICATIONS_DIR, ensure_dirs
 from jobos.llm_client import llm_is_available
-from jobos.io import load_yaml, read_text, write_json, write_text
+from jobos.io import load_yaml, read_text
 from jobos.schemas import ApplicationPack, TrackerRecord
 from jobos.tracker import save_application
 from jobos.agents.job_parser_agent import parse_job
@@ -17,6 +17,7 @@ from jobos.agents.fit_scorer_agent import score_fit
 from jobos.agents.answer_drafter_agent import draft_answer
 from jobos.agents.claim_verifier_agent import verify_answer
 from jobos.agents.cv_tailor_agent import tailor_cv
+from jobos.application_bundle import generate_bundle
 
 app = typer.Typer(help="JobOS Application Agent MVP")
 console = Console()
@@ -108,72 +109,14 @@ def run(
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     slug = f"{pack.parsed_job.company}_{pack.parsed_job.role_title}".replace(" ", "_").replace("/", "-")
     out_dir = APPLICATIONS_DIR / f"{timestamp}_{slug}"
-    out_dir.mkdir(parents=True, exist_ok=True)
 
-    write_json(out_dir / "application_pack.json", pack.model_dump())
+    profile = load_yaml(DATA_DIR / "profile.yaml")
+    approved = load_yaml(DATA_DIR / "approved_claims.yaml")
+    adjacent_claims = approved.get("adjacent_claims", {})
 
-    ct = pack.cv_tailor
-    md = [
-        f"# Application Pack: {pack.parsed_job.company} — {pack.parsed_job.role_title}",
-        "",
-        f"Fit: **{pack.fit_score.overall_score}/100 ({pack.fit_score.category})**",
-        "",
-        "## Strategy",
-        pack.fit_score.application_strategy,
-        "",
-        "## CV Tailoring Suggestions",
-        f"**Positioning:** {ct.positioning_angle}",
-        "",
-        "### CV Summary Draft",
-        "> " + ct.cv_summary_draft,
-        "",
-        *(
-            [
-                f"⚠️ **CV Summary Claim Warning ({ct.cv_summary_verification.final_risk_level} risk)** — "
-                "review before using.",
-                *([f"- Unsupported: {', '.join(ct.cv_summary_verification.unsupported_claims)}"] if ct.cv_summary_verification.unsupported_claims else []),
-                *([f"- Exaggerated: {', '.join(ct.cv_summary_verification.exaggerated_claims)}"] if ct.cv_summary_verification.exaggerated_claims else []),
-                "",
-            ]
-            if ct.cv_summary_verification and ct.cv_summary_verification.final_risk_level != "low"
-            else []
-        ),
-        "### Bullets to Emphasise",
-        *[f"- {x}" for x in ct.bullets_to_emphasise],
-        "",
-        "### Bullets to De-emphasise",
-        *[f"- {x}" for x in ct.bullets_to_de_emphasise],
-        "",
-        "### Suggested Skill Order",
-        *[f"- {x}" for x in ct.reordered_skills],
-        "",
-        "### Approved Claims — Use Verbatim",
-        *[f"- {x}" for x in ct.approved_claims_usable],
-        "",
-        "### Adjacent / Careful Claims — Use Only With This Wording",
-        "> These are true but require careful framing. Use the exact phrasing below.",
-        *[f"- {x}" for x in ct.adjacent_experience],
-        "",
-        "### Do NOT Claim",
-        *[f"- {x}" for x in ct.unsupported_claims],
-        "",
-        "## Strengths",
-        *[f"- {x}" for x in pack.fit_score.strengths],
-        "",
-        "## Weaknesses / Review Points",
-        *[f"- {x}" for x in (pack.risks_to_review or pack.fit_score.weaknesses)],
-        "",
-        "## Answers",
-    ]
-    for ans in pack.answers:
-        md.extend([
-            "",
-            f"### {ans.question}",
-            ans.answer,
-            "",
-            f"Confidence: {ans.confidence}; Human review: {ans.needs_human_review}; Reason: {ans.review_reason or 'n/a'}",
-        ])
-    write_text(out_dir / "application_pack.md", "\n".join(md))
+    bundle = generate_bundle(
+        pack, out_dir, profile, adjacent_claims, approved_claims_full=approved
+    )
 
     app_id = None
     if save_tracker:
@@ -189,11 +132,18 @@ def run(
         app_id = save_application(record)
 
     console.print(Panel.fit(
-        f"Created application pack:\n{out_dir}\n\nTracker ID: {app_id or 'not saved'}",
+        f"Bundle written to:\n{bundle.out_dir}\n\n"
+        f"  tailored_cv.md\n  cover_letter.md\n  application_answers.md\n"
+        f"  application_pack.json\n  application_pack.md\n\n"
+        f"Tracker ID: {app_id or 'not saved'}",
         title="Done",
     ))
     console.print(f"Fit: [bold]{pack.fit_score.overall_score}/100[/bold] ({pack.fit_score.category})")
     console.print(f"Strategy: {pack.fit_score.application_strategy}")
+    if bundle.high_risk_warnings:
+        console.print("[bold red]⚠ High-risk warnings:[/bold red]")
+        for w in bundle.high_risk_warnings:
+            console.print(f"  {w}")
 
 
 if __name__ == "__main__":
