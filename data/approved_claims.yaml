@@ -1,11 +1,26 @@
+# JobOS source-of-truth claims for Sumedh Brahmadevara
+#
+# approved_claims: use verbatim or with minimal paraphrase.
+# adjacent_claims: real experience — framing matters. Read the note before using.
+# forbidden_claims: must not appear on any CV, cover letter or application answer.
+
 approved_claims:
+
+  current_role:
+    claim: "Credit Analyst at Premier Miton Investors, covering consumer-sector credit since September 2025."
+    contexts:
+      - all applications
+      - cover letters
+      - bio and LinkedIn summary
+
   deep_coverage:
-    claim: "Conduct deep fundamental research across 60+ consumer-sector issuers, including business models, competitive positioning, sector dynamics, management strategy and credit risks."
+    claim: "Conduct deep fundamental research across 60+ consumer-sector issuers, analysing business models, competitive positioning, sector dynamics, management strategy and key credit risks."
     contexts:
       - credit analyst applications
       - public markets analyst applications
       - hedge fund analyst applications
       - consumer sector roles
+      - fundamental research roles
 
   monitored_universe:
     claim: "Monitor approximately 300 IG/HY issuers, tracking earnings, corporate developments, cash-bond spreads, curves, liquidity and event risk."
@@ -13,42 +28,158 @@ approved_claims:
       - credit roles
       - fixed income roles
       - public markets roles
+      - hedge fund analyst roles
 
   primary_market:
-    claim: "Systematically price 15–20 new bond issues per month using issuer curves, peer comparables, ratings, maturity profiles and concession analysis."
+    claim: "Analyse 15–20 new primary bond issues per month using issuer curves, peer comparables, ratings, maturity profiles and new issue concession analysis."
     contexts:
-      - fixed income
-      - credit
-      - public markets
+      - fixed income roles
+      - credit roles
+      - public markets roles
+      - primary market roles
       - trading analyst roles
 
   modelling:
     claim: "Build forward-looking financial models covering revenue drivers, margins, free cash flow, leverage, liquidity, lease-adjusted metrics and maturity profiles."
     contexts:
-      - equity research
-      - credit research
+      - equity research roles
+      - credit research roles
       - hedge fund analyst roles
-      - investment roles
+      - financial modelling roles
+      - investment analyst roles
+
+  business_analysis:
+    claim: "Analyse business models, competitive positioning, sector dynamics, management strategy and key credit risks across consumer, airlines, airports and business-services sectors."
+    contexts:
+      - credit analyst applications
+      - equity analyst applications
+      - fundamental research roles
+      - consumer sector roles
+      - sector-focused roles
+
+  bond_valuation:
+    claim: "Experienced in bond valuation, spread and curve analysis, and relative value work across IG and HY credit."
+    contexts:
+      - fixed income roles
+      - credit roles
+      - trading analyst roles
+      - public markets roles
+
+  investor_calls:
+    claim: "Attend investor calls and synthesise commentary from company management, rating agencies and equity analysts to form independent investment views."
+    contexts:
+      - hedge fund analyst roles
+      - buy-side analyst roles
+      - public markets roles
+      - investment analyst roles
+
+  workflow_tools:
+    claim: "Building internal tools for relative value analysis, new issue pricing, issuer monitoring and AI-assisted research workflow improvement."
+    contexts:
+      - technology-forward investment roles
+      - systematic research roles
+      - quant-adjacent roles
+      - data analyst roles
+
+  cambridge_degree:
+    claim: "BA Economics (2.1), University of Cambridge (Emmanuel College)."
+    contexts:
+      - all applications
 
   dissertation:
-    claim: "Completed an Adam Smith Prize-winning Cambridge economics dissertation using panel data, spatial econometrics and data harmonisation."
+    claim: "Completed an Adam Smith Prize-winning Cambridge Economics dissertation on housing affordability and gentrification, using spatial econometrics, panel data, fixed effects models and data harmonisation across MSOA-level housing and economic data."
     contexts:
-      - quant research
-      - data science
+      - quant research roles
+      - data science roles
       - econometrics-heavy roles
-      - systematic research
+      - systematic research roles
+      - data analyst roles
+      - any role requiring demonstrated quantitative rigour
 
-  python_learning:
-    claim: "Actively building Python capability, with interest in applying data analysis, econometrics and automation to investment workflows."
+  systematic_interest:
+    claim: "Interested in combining fundamental investment judgement with systematic use of data, earnings signals, pricing data and econometric methods to generate more repeatable investment insights."
+    contexts:
+      - semi-systematic roles
+      - quant-adjacent roles
+      - systematic research roles
+      - data-driven public markets roles
+
+  python_building:
+    claim: "Actively building Python capability for investment workflow tools, data analysis and AI-assisted research, with interest in applying automation to the investment process."
     contexts:
       - quant-adjacent roles
-      - data roles
+      - technology-forward roles
       - systematic research transitions
+      - data analyst roles
+
+adjacent_claims:
+
+  python_experience:
+    note: >-
+      Can say "building Python skills" or "using Python for workflow and tooling projects".
+      Do NOT say "advanced Python developer", "production engineer" or imply professional
+      software development experience at any level.
+    safe_phrases:
+      - "Building Python capability for investment workflow automation and data analysis."
+      - "Using Python for tooling projects, including AI-assisted investment workflow tools."
+      - "Growing Python skills applied to econometric analysis and workflow improvement."
+
+  machine_learning:
+    note: >-
+      Can express genuine interest in ML and data-driven methods, and reference the Cambridge
+      econometrics dissertation as evidence of quantitative aptitude. Do NOT claim to be a
+      professional ML engineer, to have built production ML systems, or to have deployed models
+      in any professional context.
+    safe_phrases:
+      - "Interested in applying machine learning and data-driven methods to investment research."
+      - "Quantitative foundation from Cambridge econometrics research, with growing interest in ML applications to public markets."
+
+  quant_research:
+    note: >-
+      Can say "strong econometric foundation and growing systematic research interest". Can
+      reference the Cambridge dissertation as evidence of rigorous quantitative work. Do NOT
+      claim professional quant researcher status, production systematic trading experience,
+      or imply that university-level backtesting is equivalent to professional quant work.
+    safe_phrases:
+      - "Strong econometric foundation from Cambridge research, with growing interest in systematic investment approaches."
+      - "Applying econometric methods from dissertation work to investment data problems."
+      - "Exposure to backtesting across equities, fixed income and macro themes through university finance work."
+
+  equity_investing:
+    note: >-
+      Can say "credit-trained public markets analyst moving closer to equity risk and alpha
+      generation". Can reference public markets crossover and the transferability of credit
+      fundamentals. Do NOT claim direct equity analyst experience, equity portfolio construction
+      experience, or imply you have generated equity returns in a professional context.
+    safe_phrases:
+      - "Credit-trained public markets analyst with downside-risk discipline and fundamental analysis experience transferable to equity roles."
+      - "Experience analysing equity risk through a credit lens: downside scenarios, capital allocation, refinancing risk and market-implied expectations."
+
+  systematic_investing:
+    note: >-
+      Can mention university-level backtesting exposure and genuine systematic research interest.
+      Do NOT claim production systematic trading experience, imply you manage or have managed a
+      live systematic strategy, or overstate the sophistication of university finance work.
+    safe_phrases:
+      - "Exposure to backtesting across equities, fixed income and macro themes through university finance work."
+      - "Growing interest in systematic research and combining fundamental judgement with data-driven signal generation."
 
 forbidden_claims:
-  - "Production machine learning engineer"
   - "Advanced Python developer"
+  - "Production machine learning engineer"
   - "Professional quant researcher"
+  - "Professional equity analyst"
+  - "Experienced equity analyst"
+  - "Direct equity analyst experience"
+  - "Three years of coding experience"
   - "Three years of Python production experience"
-  - "Direct equity analyst experience if not true for the role"
+  - "Portfolio manager"
+  - "Expert systematic trader"
+  - "Built production trading systems"
+  - "Managed a live investment book"
+  - "CFA charterholder"
+  - "CFA Level 1 passed"
   - "Built institutional-grade systematic trading models unless specifically evidenced"
+  - "Professional software engineer"
+  - "Machine learning expert"
+  - "Quantitative trading experience"

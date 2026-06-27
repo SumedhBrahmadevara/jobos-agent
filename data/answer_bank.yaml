@@ -1,14 +1,158 @@
-why_public_markets:
-  angle: "I enjoy analysing how fundamentals, expectations and market pricing interact. Credit has trained me to think carefully about downside risk, cash-flow durability and balance-sheet resilience."
+# JobOS answer bank for Sumedh Brahmadevara
+#
+# These are pre-approved angles for common application question types.
+# They are passed as context to the LLM answer drafter.
+# All angles must reflect the approved_claims.yaml source of truth.
+# Never use a forbidden claim. Always mark for human review before submitting.
 
-why_hedge_fund:
-  angle: "I am attracted to environments where research quality, judgement, speed of learning and clear investment views matter."
+# ── Why this role ──────────────────────────────────────────────────────────────
+
+why_role_fundamental_equities:
+  angle: >-
+    My credit background is training me to think like an equity analyst from the downside up.
+    I already understand business model durability, cash-flow generation, margin risk and
+    capital allocation — the same fundamentals that drive equity returns. What I want is to
+    take that analytical framework closer to alpha generation: forming investment views on
+    equity risk, engaging with management on strategy, and expressing conviction through
+    position-sizing rather than just spread recommendations. The transition from credit to
+    equity is the natural next step for an analyst who already thinks in public-markets terms.
+
+why_role_fixed_income_hf:
+  angle: >-
+    At Premier Miton I have experienced the analytical rigour of credit research — deep
+    fundamental analysis, financial modelling, primary market pricing, earnings tracking across
+    300+ issuers — but within a long-only mandate. I want to bring that research depth to an
+    environment where investment views translate directly into positions: where the quality of
+    fundamental judgement is tested daily against market pricing, and where being right in a
+    differentiated way is explicitly rewarded. Fixed income hedge funds represent that
+    environment, and I am ready for that level of accountability.
+
+why_role_systematic_quant:
+  angle: >-
+    I am drawn to combining the fundamental rigour I apply every day — cash-flow analysis,
+    earnings patterns, management signalling, primary market dynamics — with more systematic
+    use of data to generate repeatable insights. My Cambridge dissertation showed me that
+    quantitative methods and careful data handling can reveal structure in noisy real-world
+    data that discretionary judgement alone would miss. I want to bring that mindset to
+    investment research: not purely systematic, but disciplined and data-aware in how I build
+    and test ideas. I am building Python capability specifically for this transition.
+
+why_role_sector_data:
+  angle: >-
+    My day-to-day work already involves synthesising earnings, corporate announcements, spread
+    data, primary market flows and sector dynamics across 300+ issuers. I am doing
+    data-intensive sector analysis every day — what I want is a role where that work can be
+    sharpened with better tooling, more rigorous quantitative framing, and the opportunity to
+    build reusable data products rather than one-off analyses. My Cambridge econometrics
+    background gives me the foundation; the role gives me the scope.
+
+# ── Why this firm ─────────────────────────────────────────────────────────────
+
+why_firm_hf_public_markets:
+  angle: >-
+    I am looking for an environment where the quality of investment thinking is the primary
+    measure of performance, and where analytical work translates directly into portfolio
+    outcomes. I want to be in a room where deep fundamental research, differentiated views
+    and intellectual honesty are the currency — not process or consensus comfort. That is the
+    environment I think I can develop fastest in, and contribute most directly to.
+
+# ── Transition narratives ──────────────────────────────────────────────────────
 
 credit_to_equity:
-  angle: "My credit background gives me a differentiated lens on equities: I am trained to understand downside risk, refinancing risk, capital allocation and the market-implied expectations embedded in securities pricing."
+  angle: >-
+    My credit background gives me a differentiated lens on equities. Bond investors are trained
+    to stress-test assumptions — to ask what happens when growth slows, margins compress, or
+    the balance sheet becomes constrained. That discipline is useful when assessing equity risk:
+    I look at capital allocation, refinancing risk, covenant headroom and cash-flow durability
+    before I look at upside scenarios. I believe equity analysis is stronger when it
+    incorporates rigorous downside thinking, and that is the perspective I bring from credit.
 
-systematic_transition:
-  angle: "I am interested in combining fundamental investment judgement with more systematic use of data, transcripts, pricing signals and econometric methods."
+credit_to_systematic:
+  angle: >-
+    Credit research is already more data-intensive than it looks: earnings across hundreds of
+    issuers, spread moves versus sector, management commentary signals, primary market supply
+    dynamics. I have been tracking these systematically, and I am increasingly interested in
+    extracting that analytical work into more repeatable, data-driven frameworks. My Cambridge
+    dissertation gave me a foundation in panel data, spatial econometrics and data harmonisation
+    — the same tools that underlie much quantitative investment research. The systematic
+    transition, for me, is about being more deliberate and rigorous with data I am already
+    collecting.
 
-python_gap_honest_framing:
-  angle: "I am not trying to present myself as a production software engineer; I am building Python capability deliberately to strengthen my investment research workflow."
+# ── Differentiation and strengths ─────────────────────────────────────────────
+
+why_me_differentiated_edge:
+  angle: >-
+    Three things differentiate me. First, breadth of credit coverage: 60+ deep-research issuers
+    and 300+ monitored across consumer, airlines, airports and business services gives me a wide
+    base for cross-sector pattern recognition. Second, the combination of fundamental analysis
+    with primary market experience: I am comfortable both in the detailed modelling room and in
+    real-time new issue pricing under uncertainty. Third, the econometric background: my Cambridge
+    dissertation required careful causal identification, rigorous data handling and honest
+    communication of model limitations — habits that matter in investment research and are
+    underrepresented in most credit analyst training.
+
+greatest_strength:
+  angle: >-
+    My greatest analytical strength is the ability to form independent views under uncertainty.
+    In credit, I am regularly required to price new bonds in real-time, make relative value calls
+    across a wide universe, and synthesise management commentary, earnings data and market signals
+    into actionable conclusions — often with incomplete information and time pressure. The
+    discipline of being decisive with incomplete data, while remaining honest about what I do not
+    know, is the quality I think matters most in investment roles.
+
+# ── Development and gaps ──────────────────────────────────────────────────────
+
+development_area_honest:
+  angle: >-
+    The area I am most actively developing is quantitative and systematic methods. My Cambridge
+    work gave me a foundation in econometrics, and I have been building Python capability for
+    workflow tooling and data analysis. I am clear-eyed that I am not yet a production-grade
+    software engineer or professional quant researcher — I am building those skills deliberately,
+    because I believe the combination of fundamental investment judgement and data-driven rigour
+    is where I can add the most distinctive value over time.
+
+# ── Concrete examples ─────────────────────────────────────────────────────────
+
+example_using_data:
+  angle: >-
+    My Cambridge economics dissertation is the clearest example. I studied housing affordability
+    and gentrification using MSOA-level housing, census and economic data, which required
+    significant data harmonisation across incompatible geographies before any analysis was
+    possible. I then used spatial econometrics — including spatial Durbin models and fixed
+    effects panel regressions — to isolate the relationship between gentrification and housing
+    cost displacement. The project required treating data sceptically, being explicit about
+    model limitations, and communicating findings clearly. It won the Adam Smith Prize for Best
+    Dissertation in Part IIB Economics.
+
+example_investment_judgement:
+  angle: >-
+    In primary markets, I form investment views on new bond issues with limited time and
+    information. When a new issue comes to market from an issuer I cover, I synthesise the
+    issuer's spread curve, comparable peers, the new issue concession, the current technical
+    environment and my fundamental view of the business — and arrive at a bid, pass or monitor
+    decision quickly. That process trains you to be explicit about the assumptions embedded in a
+    price, and to recognise when market consensus is mispricing a credit relative to its
+    fundamental risk profile.
+
+# ── Sector and thematic interest ──────────────────────────────────────────────
+
+sector_interest_consumer_airlines:
+  angle: >-
+    Consumer sector coverage is analytically rich because the business models are varied —
+    grocers, apparel, leisure, travel, airlines, airports, food and beverage — and macro
+    sensitivity is high. Tracking earnings and spreads across 60+ of these issuers has given
+    me a genuinely cross-sectoral picture of where margin pressure, refinancing risk and
+    demand volatility differ by sub-sector. Airlines and airports are particularly interesting:
+    the combination of high fixed-cost structures, demand cyclicality and capital intensity
+    creates real credit differentiation that rewards deep fundamental work rather than
+    passive index exposure.
+
+interest_ai_investment_workflow:
+  angle: >-
+    I have been building AI-assisted workflow tools for my own investment research process —
+    primarily to improve how I synthesise earnings transcripts, track spread moves across my
+    universe and reduce friction in repetitive analytical tasks. My view is that the highest-value
+    application of AI in investment research is not generating views autonomously, but reducing
+    the time cost of information processing so analysts can spend more time on genuine judgement.
+    I am interested in roles where that kind of workflow thinking is valued and where rigorous
+    human oversight of AI-assisted outputs is treated as essential, not optional.

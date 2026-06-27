@@ -2,7 +2,6 @@ personal:
   name: "Sumedh Brahmadevara"
   location: "London, UK"
   email: "ADD_YOUR_EMAIL"
-  phone: "ADD_YOUR_PHONE"
   linkedin: "ADD_YOUR_LINKEDIN"
 
 current_role:
@@ -11,23 +10,39 @@ current_role:
   start_date: "September 2025"
   sectors:
     - Consumer
+    - Retailers
+    - Grocers
+    - Apparel
+    - Food & Beverage
+    - Leisure
+    - Travel
     - Airlines
     - Airports
     - Business Services
-    - Retail
-    - Food & Beverage
-    - Leisure
+  coverage:
+    issuers_deep_coverage: "60+"
+    monitored_universe: "approximately 300 IG/HY issuers"
+  responsibilities:
+    - "Conduct deep fundamental research across 60+ consumer-sector issuers, analysing business models, competitive positioning, sector dynamics, management strategy and key credit risks."
+    - "Build forward-looking financial models covering revenue drivers, margins, free cash flow, leverage, liquidity, lease-adjusted metrics and maturity profiles."
+    - "Monitor approximately 300 IG/HY issuers, tracking earnings, corporate developments, cash-bond spreads, curves, liquidity and event risk."
+    - "Analyse 15–20 new primary bond issues per month using issuer curves, peer comparables, ratings, maturity profiles and new issue concession analysis."
+    - "Attend investor calls and synthesise commentary from company management, rating agencies and equity analysts to form independent investment views."
+    - "Build or contribute to internal tools for relative value analysis, new issue pricing, issuer monitoring and investment workflow improvement."
   skills:
     - Fundamental credit research
+    - Public markets analysis
     - Financial modelling
     - Bond valuation
-    - New issue analysis
+    - Primary market pricing
     - Relative value analysis
     - Earnings analysis
     - Management commentary analysis
-    - Cash-flow analysis
-    - Balance-sheet analysis
-    - Downside risk analysis
+    - Balance sheet analysis
+    - Cash-flow durability analysis
+    - Downside-risk assessment
+    - Sector research
+    - Credit spread and curve analysis
 
 education:
   university: "University of Cambridge"
@@ -38,23 +53,44 @@ education:
     title: "Housing Affordability in the Face of Gentrification: An Economic Inquiry"
     prize: "Adam Smith Prize for Best Dissertation in Part IIB Economics"
     methods:
-      - Econometrics
-      - Spatial econometrics
       - Panel data
+      - Spatial econometrics
+      - Fixed effects models
+      - Spatial Durbin model
       - Data harmonisation
+      - MSOA-level housing and economic analysis
+
+earlier_experience:
+  notes:
+    - "Contributed to university finance/quant work involving backtests across equities, fixed income and macro themes — frame as university-level exposure, not professional experience."
+    - "Currently building Python skills and AI-assisted workflow tools for investment research. Frame as developing capability, not production engineering expertise."
 
 target_roles:
-  - Fixed income analyst at a hedge fund
+  - Fixed income hedge fund analyst
+  - Fundamental equities analyst
   - Semi-systematic fixed income analyst
-  - Systematic credit researcher
-  - Equity analyst at a hedge fund
-  - Semi-systematic equity analyst
-  - Systematic equity researcher
-  - Quant research in fixed income
-  - General quant research
+  - Systematic credit research
+  - Systematic equity research
+  - Quant research, where appropriate
+  - Sector data analyst
+  - Public markets investment analyst
+
+positioning:
+  headline: >-
+    Credit-trained public markets analyst with strong downside-risk discipline,
+    financial modelling experience across consumer/airlines/business-services sectors,
+    bond valuation and primary market expertise, and growing interest in systematic
+    and data-driven investment research.
+  strengths:
+    - Deep fundamental credit research across consumer, airlines, airports and business-services sectors
+    - Financial modelling covering revenue, FCF, leverage, liquidity, lease-adjusted metrics and maturity profiles
+    - Bond valuation, spread and curve analysis, and primary market pricing experience
+    - Investor call participation and synthesis of management, ratings and equity analyst commentary
+    - Econometric and data-analysis background from Cambridge Economics dissertation
+    - Growing Python and AI-assisted workflow capability for investment research
 
 preferences:
   minimum_salary_gbp: 80000
   locations:
     - London
-  tone: "sharp, credible, investment-focused, direct, not generic"
+  tone: "sharp, credible, investment-focused, direct, not generic, not overconfident"
