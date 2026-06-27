@@ -47,6 +47,7 @@ class CVTailorSuggestions(BaseModel):
     approved_claims_usable: list[str] = Field(default_factory=list, description="Approved claims that can be used directly for this role.")
     adjacent_experience: list[str] = Field(default_factory=list, description="Real experience that must be framed carefully — not overstated.")
     unsupported_claims: list[str] = Field(default_factory=list, description="Statements that must NOT appear on the CV for this role.")
+    cv_summary_verification: VerificationResult | None = Field(default=None, description="Claim-verifier result for the CV summary draft.")
 
 
 class ApplicationPack(BaseModel):

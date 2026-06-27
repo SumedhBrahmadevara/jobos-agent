@@ -1,6 +1,6 @@
 """Offline tests for the CV Tailoring Agent."""
 import pytest
-from jobos.schemas import ParsedJob, FitScore, CVTailorSuggestions
+from jobos.schemas import ParsedJob, FitScore, CVTailorSuggestions, VerificationResult
 
 
 def _job(**kwargs) -> ParsedJob:
@@ -251,3 +251,42 @@ def test_reordered_skills_uses_profile_skills_as_fallback():
     job = _job(required_skills=["operations"])  # no keyword matches
     result = tailor_cv(job, _fit(), profile, {})
     assert len(result.reordered_skills) > 0
+
+
+# ── CV summary verification ───────────────────────────────────────────────────
+
+def test_cv_summary_verification_attached_in_pipeline(tmp_path):
+    """build_pack must attach cv_summary_verification to cv_tailor."""
+    from pathlib import Path
+    from apply import build_pack
+    job = tmp_path / "job.txt"
+    job.write_text("Company: Test Fund\nRole: Equity Analyst\n", encoding="utf-8")
+    qs = tmp_path / "qs.txt"
+    qs.write_text("", encoding="utf-8")
+    pack = build_pack(job, qs)
+    assert pack.cv_tailor.cv_summary_verification is not None
+    assert isinstance(pack.cv_tailor.cv_summary_verification, VerificationResult)
+
+
+def test_risky_cv_summary_flagged_high_risk():
+    """A CV summary containing a forbidden term must be flagged as high risk."""
+    from jobos.agents.claim_verifier_agent import verify_answer
+    risky_draft = (
+        "Advanced Python developer and production machine learning engineer "
+        "with expert-level systematic trading model experience."
+    )
+    result = verify_answer(risky_draft, {}, ["Advanced Python developer", "Production machine learning engineer"])
+    assert result.final_risk_level == "high"
+    assert not result.pass_check
+
+
+def test_clean_cv_summary_passes_verification():
+    """A CV summary with no forbidden terms or risky phrases must pass as low risk."""
+    from jobos.agents.claim_verifier_agent import verify_answer
+    clean_draft = (
+        "Credit analyst with deep fundamental research experience across "
+        "consumer-sector issuers. Applying for an equity research role."
+    )
+    result = verify_answer(clean_draft, {}, [])
+    assert result.final_risk_level == "low"
+    assert result.pass_check

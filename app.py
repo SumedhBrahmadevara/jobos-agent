@@ -235,6 +235,23 @@ if pack is not None:
     with st.expander("CV summary / profile draft", expanded=True):
         st.info(ct.cv_summary_draft)
         st.caption("Draft only — verify every claim against approved_claims.yaml before using.")
+        if ct.cv_summary_verification is not None:
+            vr = ct.cv_summary_verification
+            badge = _RISK_BADGE[vr.final_risk_level]
+            if vr.final_risk_level == "low":
+                st.success(f"Claim check: {badge} — no issues detected in CV summary.")
+            else:
+                risk_fn = st.error if vr.final_risk_level == "high" else st.warning
+                risk_fn(f"Claim check: {badge} — review CV summary before using.")
+                if vr.unsupported_claims:
+                    st.error("Unsupported: " + ", ".join(f"`{c}`" for c in vr.unsupported_claims))
+                if vr.exaggerated_claims:
+                    st.error("Forbidden / exaggerated: " + ", ".join(f"`{c}`" for c in vr.exaggerated_claims))
+                if vr.generic_phrases:
+                    st.warning("Generic phrases: " + ", ".join(f"`{p}`" for p in vr.generic_phrases))
+                if vr.recommended_edits:
+                    for edit in vr.recommended_edits:
+                        st.info(f"Suggested edit: {edit}")
 
     col_em, col_de = st.columns(2)
     with col_em:

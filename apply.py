@@ -35,6 +35,12 @@ def build_pack(job_file: Path, questions_file: Path | None) -> ApplicationPack:
     parsed = parse_job(job_description)
     fit = score_fit(parsed, profile)
     cv_tailor = tailor_cv(parsed, fit, profile, approved)
+    summary_verification = verify_answer(
+        cv_tailor.cv_summary_draft,
+        approved.get("approved_claims", {}),
+        approved.get("forbidden_claims", []),
+    )
+    cv_tailor = cv_tailor.model_copy(update={"cv_summary_verification": summary_verification})
 
     answers = []
     risks = list(parsed.red_flags)
@@ -108,6 +114,17 @@ def run(
         "### CV Summary Draft",
         "> " + ct.cv_summary_draft,
         "",
+        *(
+            [
+                f"⚠️ **CV Summary Claim Warning ({ct.cv_summary_verification.final_risk_level} risk)** — "
+                "review before using.",
+                *([f"- Unsupported: {', '.join(ct.cv_summary_verification.unsupported_claims)}"] if ct.cv_summary_verification.unsupported_claims else []),
+                *([f"- Exaggerated: {', '.join(ct.cv_summary_verification.exaggerated_claims)}"] if ct.cv_summary_verification.exaggerated_claims else []),
+                "",
+            ]
+            if ct.cv_summary_verification and ct.cv_summary_verification.final_risk_level != "low"
+            else []
+        ),
         "### Bullets to Emphasise",
         *[f"- {x}" for x in ct.bullets_to_emphasise],
         "",

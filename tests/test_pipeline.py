@@ -37,6 +37,8 @@ def test_pipeline_returns_complete_pack(tmp_path):
     assert pack.cv_tailor.cv_summary_draft
     assert len(pack.cv_tailor.bullets_to_emphasise) > 0
     assert len(pack.cv_tailor.unsupported_claims) > 0
+    # CV summary must have been safety-checked
+    assert pack.cv_tailor.cv_summary_verification is not None
 
 
 def test_pipeline_produces_one_answer_per_question(tmp_path):
