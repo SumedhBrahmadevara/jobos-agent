@@ -27,6 +27,9 @@ browser_state/
 outputs/
 !outputs/.gitkeep
 
+# Profile backups contain personal data and are local only
+data/backups/
+
 # OS/editor
 .DS_Store
 Thumbs.db
