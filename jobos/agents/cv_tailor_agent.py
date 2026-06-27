@@ -9,9 +9,10 @@ Generate safe, truthful, role-specific CV tailoring suggestions.
 Rules:
 - Use only claims from the user's approved claims list. Label everything else explicitly.
 - Never invent experience. Never upgrade exposure into expertise.
-- Distinguish three tiers clearly:
+- Distinguish THREE tiers clearly:
   (1) approved_claims_usable: claims the user can include verbatim.
   (2) adjacent_experience: real experience that needs careful framing — not overstated.
+      Use only the safe_phrases from adjacent_claims. Never upgrade adjacent experience into expertise.
   (3) unsupported_claims: statements the user must NOT make on this CV.
 - The cv_summary_draft must be factually accurate. Do not add claims not in the profile.
 - All suggestions must be actionable and specific to the role.
@@ -135,22 +136,46 @@ def _offline_tailor(
         approved_claims_usable = ["Use only claims explicitly listed in approved_claims.yaml without modification."]
 
     # ── Adjacent experience — must be framed carefully ───────────────────────
+    # Prefer safe_phrases from the YAML adjacent_claims section when available.
+    adjacent_section = approved_claims.get("adjacent_claims", {}) if approved_claims else {}
+
+    # JD relevance map: adjacent claim key → JD keywords that trigger inclusion
+    _ADJACENT_RELEVANCE = {
+        "python_experience": ["python", "data analysis", "data science", "coding"],
+        "machine_learning": ["machine learning", "ml", "ai", "artificial intelligence"],
+        "quant_research": ["quant", "systematic", "quantitative", "econometric", "algorithmic"],
+        "equity_investing": ["equity", "long/short", "fundamental equity"],
+        "systematic_investing": ["systematic", "quant", "semi-systematic", "rule-based"],
+    }
+
     adjacent_experience: list[str] = []
-    if "python" in all_jd or "data" in all_jd:
-        adjacent_experience.append(
-            "Python/data: frame as 'actively building capability for investment workflows' — "
-            "reference Cambridge econometrics dissertation, not production engineering."
-        )
-    if "equity" in role_lower or "equity" in all_jd:
-        adjacent_experience.append(
-            "Credit-to-equity: frame bond analysis as training in equity risk (downside, "
-            "capital allocation, market-implied expectations) — not a separate track."
-        )
-    if "systematic" in all_jd or "quant" in all_jd:
-        adjacent_experience.append(
-            "Quant/systematic: reference dissertation panel data and econometrics as evidence "
-            "of quantitative aptitude — do not claim professional systematic trading experience."
-        )
+    if isinstance(adjacent_section, dict):
+        for key, val in adjacent_section.items():
+            if not isinstance(val, dict):
+                continue
+            triggers = _ADJACENT_RELEVANCE.get(key, [])
+            safe_phrases: list[str] = val.get("safe_phrases", [])
+            if any(kw in all_jd for kw in triggers) and safe_phrases:
+                # Use the first safe phrase as the primary framing guidance
+                adjacent_experience.append(safe_phrases[0])
+
+    # Fall back to hardcoded content if YAML didn't supply adjacent guidance
+    if not adjacent_experience:
+        if "python" in all_jd or "data" in all_jd:
+            adjacent_experience.append(
+                "Python/data: frame as 'actively building capability for investment workflows' — "
+                "reference Cambridge econometrics dissertation, not production engineering."
+            )
+        if "equity" in role_lower or "equity" in all_jd:
+            adjacent_experience.append(
+                "Credit-to-equity: frame bond analysis as training in equity risk (downside, "
+                "capital allocation, market-implied expectations) — not a separate track."
+            )
+        if "systematic" in all_jd or "quant" in all_jd:
+            adjacent_experience.append(
+                "Quant/systematic: reference dissertation panel data and econometrics as evidence "
+                "of quantitative aptitude — do not claim professional systematic trading experience."
+            )
     if not adjacent_experience:
         adjacent_experience = [
             "Frame all cross-disciplinary experience as additive context, not a primary qualification."
@@ -191,6 +216,7 @@ def tailor_cv(
     profile: dict,
     approved_claims: dict,
 ) -> CVTailorSuggestions:
+    adjacent_section = approved_claims.get("adjacent_claims", {}) if approved_claims else {}
     user_prompt = f"""
 Parsed job:
 {parsed_job.model_dump_json(indent=2)}
@@ -203,6 +229,9 @@ User profile:
 
 Approved and forbidden claims:
 {approved_claims}
+
+Adjacent/careful claims (use safe_phrases only — never upgrade to expertise claims):
+{adjacent_section}
 """
     try:
         return structured_completion(

@@ -27,6 +27,8 @@ def build_pack(job_file: Path, questions_file: Path | None) -> ApplicationPack:
     profile = load_yaml(DATA_DIR / "profile.yaml")
     approved = load_yaml(DATA_DIR / "approved_claims.yaml")
     answer_bank = load_yaml(DATA_DIR / "answer_bank.yaml")
+    adjacent_claims = approved.get("adjacent_claims", {})
+
     job_description = read_text(job_file)
     questions = []
     if questions_file and questions_file.exists():
@@ -39,6 +41,7 @@ def build_pack(job_file: Path, questions_file: Path | None) -> ApplicationPack:
         cv_tailor.cv_summary_draft,
         approved.get("approved_claims", {}),
         approved.get("forbidden_claims", []),
+        adjacent_claims=adjacent_claims,
     )
     cv_tailor = cv_tailor.model_copy(update={"cv_summary_verification": summary_verification})
 
@@ -52,14 +55,24 @@ def build_pack(job_file: Path, questions_file: Path | None) -> ApplicationPack:
             profile=profile,
             approved_claims=approved,
             answer_bank=answer_bank,
+            adjacent_claims=adjacent_claims,
         )
-        verification = verify_answer(draft.answer, approved, approved)
+        verification = verify_answer(
+            draft.answer,
+            approved.get("approved_claims", {}),
+            approved.get("forbidden_claims", []),
+            adjacent_claims=adjacent_claims,
+        )
         if verification.final_risk_level != "low":
             draft.needs_human_review = True
             draft.review_reason = draft.review_reason or "Claim verifier flagged this answer."
             risks.extend(verification.unsupported_claims)
             risks.extend(verification.exaggerated_claims)
             risks.extend(verification.generic_phrases)
+        # Surface adjacent claim topics in risks_to_review for human awareness
+        risks.extend(
+            f"Adjacent claim detected: {t}" for t in verification.adjacent_claims_detected
+        )
         answers.append(draft)
 
     cv_angle = fit.application_strategy
@@ -134,10 +147,11 @@ def run(
         "### Suggested Skill Order",
         *[f"- {x}" for x in ct.reordered_skills],
         "",
-        "### Approved Claims (use verbatim)",
+        "### Approved Claims — Use Verbatim",
         *[f"- {x}" for x in ct.approved_claims_usable],
         "",
-        "### Adjacent Experience (frame carefully)",
+        "### Adjacent / Careful Claims — Use Only With This Wording",
+        "> These are true but require careful framing. Use the exact phrasing below.",
         *[f"- {x}" for x in ct.adjacent_experience],
         "",
         "### Do NOT Claim",

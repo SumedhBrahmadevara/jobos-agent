@@ -72,6 +72,10 @@ class VerificationResult(BaseModel):
     unsupported_claims: list[str] = Field(default_factory=list)
     exaggerated_claims: list[str] = Field(default_factory=list)
     generic_phrases: list[str] = Field(default_factory=list)
+    adjacent_claims_detected: list[str] = Field(
+        default_factory=list,
+        description="Adjacent/careful experience topics detected — true but require careful framing.",
+    )
     recommended_edits: list[str] = Field(default_factory=list)
     final_risk_level: Literal["low", "medium", "high"]
 

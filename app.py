@@ -242,20 +242,27 @@ with tab_apply:
             if ct.cv_summary_verification is not None:
                 vr = ct.cv_summary_verification
                 badge = _RISK_BADGE[vr.final_risk_level]
-                if vr.final_risk_level == "low":
+                if vr.final_risk_level == "low" and not vr.adjacent_claims_detected:
                     st.success(f"Claim check: {badge} — no issues detected in CV summary.")
                 else:
                     risk_fn = st.error if vr.final_risk_level == "high" else st.warning
-                    risk_fn(f"Claim check: {badge} — review CV summary before using.")
+                    if vr.final_risk_level != "low":
+                        risk_fn(f"Claim check: {badge} — review CV summary before using.")
                     if vr.unsupported_claims:
                         st.error("Unsupported: " + ", ".join(f"`{c}`" for c in vr.unsupported_claims))
                     if vr.exaggerated_claims:
                         st.error("Forbidden / exaggerated: " + ", ".join(f"`{c}`" for c in vr.exaggerated_claims))
                     if vr.generic_phrases:
                         st.warning("Generic phrases: " + ", ".join(f"`{p}`" for p in vr.generic_phrases))
+                    if vr.adjacent_claims_detected:
+                        st.warning(
+                            "🟡 Adjacent topics in summary — review framing: "
+                            + ", ".join(f"`{t}`" for t in vr.adjacent_claims_detected)
+                        )
                     if vr.recommended_edits:
-                        for edit in vr.recommended_edits:
-                            st.info(f"Suggested edit: {edit}")
+                        with st.expander("Framing recommendations", expanded=False):
+                            for edit in vr.recommended_edits:
+                                st.info(edit)
 
         col_em, col_de = st.columns(2)
         with col_em:
@@ -275,17 +282,20 @@ with tab_apply:
         col_ap, col_adj, col_no = st.columns(3)
         with col_ap:
             st.write("**✅ Approved claims**")
-            st.caption("Use verbatim.")
+            st.caption("Use verbatim — these are confirmed facts.")
             for c in ct.approved_claims_usable:
                 st.success(c)
         with col_adj:
-            st.write("**🟡 Adjacent experience**")
-            st.caption("Frame carefully — do not overstate.")
+            st.write("**🟡 Adjacent / Careful Claims**")
+            st.caption(
+                "True but require careful framing. "
+                "Use only the exact wording shown — do not upgrade to expertise claims."
+            )
             for c in ct.adjacent_experience:
                 st.warning(c)
         with col_no:
             st.write("**🚨 Do NOT claim**")
-            st.caption("Must not appear on CV.")
+            st.caption("Must not appear on CV or any application.")
             for c in ct.unsupported_claims:
                 st.error(c)
 
@@ -303,12 +313,14 @@ with tab_apply:
             st.info("No application questions were provided. Add questions above and regenerate.")
         else:
             approved_data: dict = st.session_state["approved_data"]
+            adjacent_claims_data = approved_data.get("adjacent_claims", {})
 
             for ans in pack.answers:
                 verification = verify_answer(
                     ans.answer,
                     approved_data.get("approved_claims", {}),
                     approved_data.get("forbidden_claims", []),
+                    adjacent_claims=adjacent_claims_data,
                 )
                 field_risk = classify_field(ans.question)
 
@@ -334,12 +346,12 @@ with tab_apply:
 
                     st.write("---")
                     st.write("**Claim check**")
-                    has_issues = (
+                    has_hard_issues = (
                         verification.unsupported_claims
                         or verification.exaggerated_claims
                         or verification.generic_phrases
                     )
-                    if not has_issues:
+                    if not has_hard_issues and not verification.adjacent_claims_detected:
                         st.success("No claim issues detected.")
                     else:
                         if verification.unsupported_claims:
@@ -357,9 +369,18 @@ with tab_apply:
                                 "Generic phrases to remove: "
                                 + ", ".join(f"`{p}`" for p in verification.generic_phrases)
                             )
-                        if verification.recommended_edits:
-                            for edit in verification.recommended_edits:
-                                st.info(f"Suggested edit: {edit}")
+                        if verification.adjacent_claims_detected:
+                            st.warning(
+                                "🟡 Adjacent experience detected — review framing: "
+                                + ", ".join(f"`{t}`" for t in verification.adjacent_claims_detected)
+                            )
+                        # Show recommended edits, but de-duplicate adjacent framing notes
+                        # that are already visible via adjacent_claims_detected display
+                        edits_to_show = verification.recommended_edits
+                        if edits_to_show:
+                            with st.expander("Framing recommendations", expanded=False):
+                                for edit in edits_to_show:
+                                    st.info(edit)
 
                     st.write("**Compliance note**")
                     _compliance_fn = {

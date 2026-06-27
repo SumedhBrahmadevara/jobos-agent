@@ -12,6 +12,12 @@ Rules:
 - Avoid generic phrases like 'dynamic culture' unless backed by specifics.
 - If a question asks for sensitive/legal information, mark it for human review.
 - Keep answers sharp, direct and truthful.
+- For adjacent/careful claims: use the safe_phrases provided — never upgrade them into expertise claims.
+  Examples of correct framing:
+    Python: 'building Python capability for workflow/data analysis' (NOT 'strong Python developer')
+    Quant:  'econometric foundation and growing systematic research interest' (NOT 'professional quant researcher')
+    Equity: 'credit-trained analyst moving closer to equity risk' (NOT 'experienced equity analyst')
+    Systematic: 'growing interest and university-level exposure to backtesting' (NOT 'systematic trading experience')
 """
 
 
@@ -31,7 +37,14 @@ def _offline_answer(question: str, parsed_job: ParsedJob, fit_score: FitScore, a
             "and economic data into a testable empirical framework, then interpreting the results carefully rather than treating "
             "the model output mechanically."
         )
-    elif "fit" in q:
+    elif "python" in q or "coding" in q or "technical" in q:
+        answer = (
+            "I am actively building Python capability for investment workflow tools and data analysis. "
+            "My Cambridge econometrics dissertation required working with MSOA-level geographic and economic data, "
+            "and I have since been applying similar data-handling skills to automate research workflows. "
+            "I frame this honestly as capability-building, not production engineering expertise."
+        )
+    elif "fit" in q or "strength" in q:
         answer = (
             "I bring a credit-trained investment lens: fundamental research, financial modelling, earnings analysis, management "
             "commentary analysis and a strong focus on downside risk. That gives me a differentiated way to assess public companies, "
@@ -62,8 +75,13 @@ def draft_answer(
     profile: dict,
     approved_claims: dict,
     answer_bank: dict,
+    adjacent_claims: dict | None = None,
     word_limit: int | None = None,
 ) -> DraftAnswer:
+    adjacent_section = ""
+    if adjacent_claims:
+        adjacent_section = f"\nAdjacent/careful claims (use safe_phrases only — never upgrade to expertise):\n{adjacent_claims}"
+
     user_prompt = f"""
 Question:
 {question}
@@ -85,6 +103,7 @@ Approved claims:
 
 Answer bank:
 {answer_bank}
+{adjacent_section}
 """
     try:
         return structured_completion(
