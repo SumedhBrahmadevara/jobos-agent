@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Secrets
+.env
+*.key
+*.pem
+secrets.*
+
+# Personal/sensitive local files
+local_data/
+browser_state/
+*.sqlite
+*.db
+*.db-shm
+*.db-wal
+
+# Outputs can contain application-specific personal data
+outputs/
+!outputs/.gitkeep
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Documents with personal data
+*.pdf
+*.docx
+*.doc
+*.rtf

@@ -1,0 +1,54 @@
+approved_claims:
+  deep_coverage:
+    claim: "Conduct deep fundamental research across 60+ consumer-sector issuers, including business models, competitive positioning, sector dynamics, management strategy and credit risks."
+    contexts:
+      - credit analyst applications
+      - public markets analyst applications
+      - hedge fund analyst applications
+      - consumer sector roles
+
+  monitored_universe:
+    claim: "Monitor approximately 300 IG/HY issuers, tracking earnings, corporate developments, cash-bond spreads, curves, liquidity and event risk."
+    contexts:
+      - credit roles
+      - fixed income roles
+      - public markets roles
+
+  primary_market:
+    claim: "Systematically price 15–20 new bond issues per month using issuer curves, peer comparables, ratings, maturity profiles and concession analysis."
+    contexts:
+      - fixed income
+      - credit
+      - public markets
+      - trading analyst roles
+
+  modelling:
+    claim: "Build forward-looking financial models covering revenue drivers, margins, free cash flow, leverage, liquidity, lease-adjusted metrics and maturity profiles."
+    contexts:
+      - equity research
+      - credit research
+      - hedge fund analyst roles
+      - investment roles
+
+  dissertation:
+    claim: "Completed an Adam Smith Prize-winning Cambridge economics dissertation using panel data, spatial econometrics and data harmonisation."
+    contexts:
+      - quant research
+      - data science
+      - econometrics-heavy roles
+      - systematic research
+
+  python_learning:
+    claim: "Actively building Python capability, with interest in applying data analysis, econometrics and automation to investment workflows."
+    contexts:
+      - quant-adjacent roles
+      - data roles
+      - systematic research transitions
+
+forbidden_claims:
+  - "Production machine learning engineer"
+  - "Advanced Python developer"
+  - "Professional quant researcher"
+  - "Three years of Python production experience"
+  - "Direct equity analyst experience if not true for the role"
+  - "Built institutional-grade systematic trading models unless specifically evidenced"

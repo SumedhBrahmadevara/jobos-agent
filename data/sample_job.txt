@@ -1,0 +1,5 @@
+Company: Example Capital
+Role: Fundamental Equity Analyst, Consumer
+Location: London
+
+We are looking for an early-career analyst to join our long/short equity team. The analyst will research public consumer companies, build financial models, analyse earnings, track management commentary, form differentiated investment views and present recommendations to portfolio managers. Strong candidates will have public markets experience, excellent modelling skills, clear written communication and evidence of intellectual curiosity. Credit experience is useful but not required. Python or data analysis experience is a plus.

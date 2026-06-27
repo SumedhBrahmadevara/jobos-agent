@@ -1,0 +1,60 @@
+personal:
+  name: "Sumedh Brahmadevara"
+  location: "London, UK"
+  email: "ADD_YOUR_EMAIL"
+  phone: "ADD_YOUR_PHONE"
+  linkedin: "ADD_YOUR_LINKEDIN"
+
+current_role:
+  title: "Credit Analyst"
+  employer: "Premier Miton Investors"
+  start_date: "September 2025"
+  sectors:
+    - Consumer
+    - Airlines
+    - Airports
+    - Business Services
+    - Retail
+    - Food & Beverage
+    - Leisure
+  skills:
+    - Fundamental credit research
+    - Financial modelling
+    - Bond valuation
+    - New issue analysis
+    - Relative value analysis
+    - Earnings analysis
+    - Management commentary analysis
+    - Cash-flow analysis
+    - Balance-sheet analysis
+    - Downside risk analysis
+
+education:
+  university: "University of Cambridge"
+  college: "Emmanuel College"
+  degree: "BA Economics"
+  grade: "2.1"
+  dissertation:
+    title: "Housing Affordability in the Face of Gentrification: An Economic Inquiry"
+    prize: "Adam Smith Prize for Best Dissertation in Part IIB Economics"
+    methods:
+      - Econometrics
+      - Spatial econometrics
+      - Panel data
+      - Data harmonisation
+
+target_roles:
+  - Fixed income analyst at a hedge fund
+  - Semi-systematic fixed income analyst
+  - Systematic credit researcher
+  - Equity analyst at a hedge fund
+  - Semi-systematic equity analyst
+  - Systematic equity researcher
+  - Quant research in fixed income
+  - General quant research
+
+preferences:
+  minimum_salary_gbp: 80000
+  locations:
+    - London
+  tone: "sharp, credible, investment-focused, direct, not generic"
