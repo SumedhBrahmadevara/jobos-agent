@@ -17,10 +17,11 @@ from jobos.profile_manager import save_yaml_safe
 from jobos.application_bundle import generate_bundle
 from jobos.docx_generator import (
     CV_PLACEHOLDERS, CL_PLACEHOLDERS,
-    validate_template, render_cv_docx, render_cover_letter_docx,
+    validate_template, diagnose_template, render_cv_docx, render_cover_letter_docx,
     TemplateNotFoundError, MissingPlaceholdersError,
 )
 from jobos.document_generator import load_cv_master
+from jobos.history import scan_applications, load_pack_from_folder, read_file_content
 
 _BACKUPS_DIR = DATA_DIR / "backups"
 
@@ -87,7 +88,9 @@ with st.sidebar:
 # ── Main tabs ─────────────────────────────────────────────────────────────────
 
 is_llm = llm_is_available()
-tab_apply, tab_profile, tab_exports = st.tabs(["🚀 Apply", "📋 Profile & Claims", "📄 Templates & Exports"])
+tab_apply, tab_profile, tab_history, tab_exports = st.tabs(
+    ["🚀 Apply", "📋 Profile & Claims", "📂 History", "📄 Templates & Exports"]
+)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # Tab 1: Apply
@@ -632,7 +635,185 @@ with tab_profile:
                 st.error(f"Invalid YAML — file not saved. Error: {exc}")
 
 # ══════════════════════════════════════════════════════════════════════════════
-# Tab 3: Templates & Exports
+# Tab 3: History
+# ══════════════════════════════════════════════════════════════════════════════
+
+with tab_history:
+    st.title("Application History")
+    st.caption(
+        "Browse and review all previously generated application packs. "
+        "Nothing is regenerated unless you return to the Apply tab."
+    )
+
+    from jobos.config import ensure_dirs
+    ensure_dirs()
+    history_entries = scan_applications(APPLICATIONS_DIR)
+
+    if not history_entries:
+        st.info(
+            "No application history found yet. "
+            "Generate an application pack in the Apply tab first."
+        )
+    else:
+        # ── Selection ──────────────────────────────────────────────────────────
+        def _entry_label(e):
+            score_str = f"{e.fit_score}/100" if e.fit_score else "—"
+            cat_str = f"[{e.category}]" if e.category else ""
+            company_role = f"{e.company} — {e.role_title}" if e.role_title else e.company or e.folder_name
+            return f"{company_role} · {score_str} {cat_str} · {e.folder_name[:15]}"
+
+        selected_idx = st.selectbox(
+            "Select application to review",
+            range(len(history_entries)),
+            format_func=lambda i: _entry_label(history_entries[i]),
+            key="history_selection",
+        )
+        entry = history_entries[selected_idx]
+
+        st.caption(f"Folder: `{entry.folder_name}`")
+
+        # ── Metadata overview ──────────────────────────────────────────────────
+        m1, m2, m3, m4 = st.columns(4)
+        m1.metric("Fit Score", f"{entry.fit_score}/100" if entry.fit_score else "—")
+        m2.metric("Category", entry.category or "—")
+        m3.metric("Company", entry.company[:20] if entry.company else "—")
+        m4.metric("Role", entry.role_title[:20] if entry.role_title else "—")
+
+        # ── Available files ────────────────────────────────────────────────────
+        st.subheader("Available Files")
+        file_cols = st.columns(4)
+        file_info = [
+            ("📋 Pack JSON", entry.has_pack_json),
+            ("📄 CV (md)", entry.has_cv_md),
+            ("✉️ Cover Letter (md)", entry.has_cl_md),
+            ("📝 Answers (md)", entry.has_answers_md),
+            ("📄 CV (docx)", entry.has_cv_docx),
+            ("✉️ CL (docx)", entry.has_cl_docx),
+            ("📦 Pack summary (md)", entry.has_pack_md),
+        ]
+        for col_i, (label, exists) in enumerate(file_info):
+            file_cols[col_i % 4].write("✅ " + label if exists else "⬜ " + label)
+
+        # ── Status from tracker ────────────────────────────────────────────────
+        if entry.company and entry.role_title:
+            tracker_records = get_applications(limit=200)
+            matching = [
+                r for r in tracker_records
+                if r["company"] == entry.company and r["role_title"] == entry.role_title
+            ]
+            if matching:
+                record = matching[0]
+                st.divider()
+                current_status = record["status"]
+                current_idx = _STATUSES.index(current_status) if current_status in _STATUSES else 0
+                new_status = st.selectbox(
+                    "Application status",
+                    options=_STATUSES,
+                    index=current_idx,
+                    key=f"hist_status_{record['id']}_{selected_idx}",
+                )
+                if new_status != current_status:
+                    update_status(record["id"], new_status)
+                    st.success(f"Status updated to: **{new_status}**")
+                    st.rerun()
+
+        # ── Full pack review ───────────────────────────────────────────────────
+        if entry.has_pack_json:
+            hist_pack = load_pack_from_folder(entry.path)
+            if hist_pack is not None:
+                st.divider()
+                st.subheader("Application Pack Review")
+
+                hist_job = hist_pack.parsed_job
+                hist_fit = hist_pack.fit_score
+                hist_ct = hist_pack.cv_tailor
+
+                if hist_job.location:
+                    st.caption(f"Location: {hist_job.location}")
+                if hist_job.platform:
+                    st.caption(f"Platform: {hist_job.platform}")
+
+                st.write("**Strategy:**", hist_fit.application_strategy)
+
+                col_str, col_wk = st.columns(2)
+                with col_str:
+                    st.write("**Strengths**")
+                    for s in hist_fit.strengths:
+                        st.write(f"- {s}")
+                with col_wk:
+                    st.write("**Review points**")
+                    for w in hist_pack.risks_to_review or hist_fit.weaknesses:
+                        st.write(f"- {w}")
+
+                if hist_job.red_flags:
+                    with st.expander(f"Red flags ({len(hist_job.red_flags)})"):
+                        for flag in hist_job.red_flags:
+                            st.write(f"- {flag}")
+
+                # CV tailoring
+                with st.expander("CV tailoring suggestions", expanded=False):
+                    st.write("**Positioning:**", hist_ct.positioning_angle)
+                    st.write("**CV summary draft:**")
+                    st.info(hist_ct.cv_summary_draft)
+                    if hist_ct.approved_claims_usable:
+                        st.write("**✅ Approved claims:**")
+                        for c in hist_ct.approved_claims_usable:
+                            st.success(c)
+                    if hist_ct.adjacent_experience:
+                        st.write("**🟡 Adjacent / careful claims:**")
+                        for c in hist_ct.adjacent_experience:
+                            st.warning(c)
+                    if hist_ct.unsupported_claims:
+                        st.write("**🚨 Do NOT claim:**")
+                        for c in hist_ct.unsupported_claims:
+                            st.error(c)
+
+                # Draft answers
+                if hist_pack.answers:
+                    hist_approved = load_yaml(DATA_DIR / "approved_claims.yaml") if (DATA_DIR / "approved_claims.yaml").exists() else {}
+                    hist_adjacent = hist_approved.get("adjacent_claims", {})
+                    with st.expander(f"Draft answers ({len(hist_pack.answers)})"):
+                        for ans in hist_pack.answers:
+                            vr = verify_answer(
+                                ans.answer,
+                                hist_approved.get("approved_claims", {}),
+                                hist_approved.get("forbidden_claims", []),
+                                adjacent_claims=hist_adjacent,
+                            )
+                            badge = _RISK_BADGE[vr.final_risk_level]
+                            st.write(f"**Q: {ans.question}**")
+                            st.write(ans.answer)
+                            st.caption(f"Claim check: {badge} · Confidence: {ans.confidence}")
+                            st.write("---")
+            else:
+                st.warning("Could not parse application_pack.json for this entry.")
+
+        # ── Markdown file previews ─────────────────────────────────────────────
+        st.divider()
+        st.subheader("Document Previews")
+
+        if entry.has_cv_md:
+            with st.expander("📄 Tailored CV (markdown)", expanded=False):
+                st.markdown(read_file_content(entry.path / "tailored_cv.md"))
+
+        if entry.has_cl_md:
+            with st.expander("✉️ Cover Letter (markdown)", expanded=False):
+                st.markdown(read_file_content(entry.path / "cover_letter.md"))
+
+        if entry.has_answers_md:
+            with st.expander("📝 Application Answers (markdown)", expanded=False):
+                st.markdown(read_file_content(entry.path / "application_answers.md"))
+
+        if entry.has_pack_md:
+            with st.expander("📦 Application Pack Summary", expanded=False):
+                st.markdown(read_file_content(entry.path / "application_pack.md"))
+
+        if not any([entry.has_cv_md, entry.has_cl_md, entry.has_answers_md, entry.has_pack_md]):
+            st.caption("No markdown files found in this application folder.")
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Tab 4: Templates & Exports
 # ══════════════════════════════════════════════════════════════════════════════
 
 with tab_exports:
@@ -670,13 +851,26 @@ with tab_exports:
             st.success(f"Saved to `data/local_templates/cv_template.docx`")
 
         if _cv_template_path.exists():
-            cv_valid, cv_missing = validate_template(_cv_template_path, CV_PLACEHOLDERS)
-            if cv_valid:
+            cv_diag = diagnose_template(_cv_template_path, CV_PLACEHOLDERS)
+            if cv_diag["is_valid"]:
                 st.success("CV template: all required placeholders found.")
             else:
                 st.error(
                     "CV template missing placeholders: "
-                    + ", ".join(f"`{{{{ {p} }}}}`" for p in cv_missing)
+                    + ", ".join(f"`{{{{ {p} }}}}`" for p in cv_diag["missing"])
+                )
+            with st.expander("Template diagnostics", expanded=not cv_diag["is_valid"]):
+                if cv_diag["found_body"]:
+                    st.write("**Found in body paragraphs:**")
+                    st.write(", ".join(f"`{{{{ {p} }}}}`" for p in cv_diag["found_body"]))
+                if cv_diag["found_table"]:
+                    st.write("**Found in table cells:**")
+                    st.write(", ".join(f"`{{{{ {p} }}}}`" for p in cv_diag["found_table"]))
+                if cv_diag["missing"]:
+                    st.error("**Missing (required):** " + ", ".join(f"`{{{{ {p} }}}}`" for p in cv_diag["missing"]))
+                st.caption(
+                    "For exact formatting, place placeholders inside your desired formatted Word "
+                    "template. The renderer replaces placeholders while preserving template style."
                 )
         else:
             st.caption("No CV template uploaded yet.")
@@ -700,13 +894,26 @@ with tab_exports:
             st.success(f"Saved to `data/local_templates/cover_letter_template.docx`")
 
         if _cl_template_path.exists():
-            cl_valid, cl_missing = validate_template(_cl_template_path, CL_PLACEHOLDERS)
-            if cl_valid:
+            cl_diag = diagnose_template(_cl_template_path, CL_PLACEHOLDERS)
+            if cl_diag["is_valid"]:
                 st.success("Cover letter template: all required placeholders found.")
             else:
                 st.error(
                     "Cover letter template missing placeholders: "
-                    + ", ".join(f"`{{{{ {p} }}}}`" for p in cl_missing)
+                    + ", ".join(f"`{{{{ {p} }}}}`" for p in cl_diag["missing"])
+                )
+            with st.expander("Template diagnostics", expanded=not cl_diag["is_valid"]):
+                if cl_diag["found_body"]:
+                    st.write("**Found in body paragraphs:**")
+                    st.write(", ".join(f"`{{{{ {p} }}}}`" for p in cl_diag["found_body"]))
+                if cl_diag["found_table"]:
+                    st.write("**Found in table cells:**")
+                    st.write(", ".join(f"`{{{{ {p} }}}}`" for p in cl_diag["found_table"]))
+                if cl_diag["missing"]:
+                    st.error("**Missing (required):** " + ", ".join(f"`{{{{ {p} }}}}`" for p in cl_diag["missing"]))
+                st.caption(
+                    "For exact formatting, place placeholders inside your desired formatted Word "
+                    "template. The renderer replaces placeholders while preserving template style."
                 )
         else:
             st.caption("No cover letter template uploaded yet.")
@@ -728,8 +935,8 @@ with tab_exports:
     elif not templates_ready:
         st.warning("Upload both templates above before generating DOCX outputs.")
     else:
-        cv_ok, _ = validate_template(_cv_template_path, CV_PLACEHOLDERS)
-        cl_ok, _ = validate_template(_cl_template_path, CL_PLACEHOLDERS)
+        cv_ok, _ = validate_template(_cv_template_path, CV_PLACEHOLDERS)  # noqa: F841
+        cl_ok, _ = validate_template(_cl_template_path, CL_PLACEHOLDERS)  # noqa: F841
 
         if not cv_ok or not cl_ok:
             st.error("Fix placeholder errors in the templates above before generating.")

@@ -435,3 +435,233 @@ def test_replace_returns_false_when_no_placeholder():
     para = doc.add_paragraph("No placeholders here.")
     changed = _replace_in_paragraph(para, {"name": "Alice"})
     assert changed is False
+
+
+# ── Run formatting preservation ────────────────────────────────────────────────
+
+def test_overwrite_preserves_bold_from_first_run():
+    """Bold formatting from the first run must survive _overwrite_paragraph."""
+    from jobos.docx_generator import _overwrite_paragraph
+
+    doc = Document()
+    para = doc.add_paragraph()
+    run = para.add_run("{{ name }}")
+    run.bold = True
+    _overwrite_paragraph(para, "Alice Smith")
+    # The new run should be bold
+    assert any(r.bold for r in para.runs if r.text.strip())
+
+
+def test_overwrite_preserves_font_size_from_first_run():
+    """Font size from the first run must survive _overwrite_paragraph."""
+    from jobos.docx_generator import _overwrite_paragraph
+    from docx.shared import Pt
+
+    doc = Document()
+    para = doc.add_paragraph()
+    run = para.add_run("{{ name }}")
+    run.font.size = Pt(14)
+    _overwrite_paragraph(para, "Bob Jones")
+    new_runs = [r for r in para.runs if r.text.strip()]
+    assert any(r.font.size == Pt(14) for r in new_runs)
+
+
+# ── _expand_paragraph ──────────────────────────────────────────────────────────
+
+def test_expand_paragraph_removes_original(tmp_path):
+    """The original placeholder paragraph must be removed after expansion."""
+    from jobos.docx_generator import _expand_paragraph
+
+    doc = Document()
+    para = doc.add_paragraph("{{ skills }}")
+    original_p = para._p
+    _expand_paragraph(para, ["• Skill A", "• Skill B"])
+    # original <w:p> must no longer be in the document body
+    assert original_p not in list(doc.element.body)
+
+
+def test_expand_paragraph_creates_correct_count(tmp_path):
+    """_expand_paragraph must insert exactly as many paragraphs as lines."""
+    from jobos.docx_generator import _expand_paragraph
+
+    doc = Document()
+    # Add a sentinel paragraph before and after to check insertion position
+    doc.add_paragraph("Before")
+    para = doc.add_paragraph("{{ bullets }}")
+    doc.add_paragraph("After")
+
+    lines = ["Line A", "Line B", "Line C"]
+    _expand_paragraph(para, lines)
+
+    texts = [p.text for p in doc.paragraphs]
+    assert "Before" in texts
+    assert "After" in texts
+    assert "Line A" in texts
+    assert "Line B" in texts
+    assert "Line C" in texts
+    # Original placeholder text must not remain
+    assert "{{ bullets }}" not in texts
+
+
+def test_expand_paragraph_preserves_paragraph_style():
+    """New paragraphs must have the same style name as the placeholder paragraph."""
+    from jobos.docx_generator import _expand_paragraph
+
+    doc = Document()
+    para = doc.add_paragraph("{{ experience_bullets }}", style="List Bullet")
+    original_style = para.style.name
+    _expand_paragraph(para, ["Bullet one", "Bullet two"])
+    # The two new paragraphs should have the same style
+    new_paras = [p for p in doc.paragraphs if p.text in ("Bullet one", "Bullet two")]
+    assert len(new_paras) == 2
+    for p in new_paras:
+        assert p.style.name == original_style
+
+
+def test_expand_paragraph_preserves_run_formatting():
+    """Text in expanded paragraphs must inherit bold/italic from the original run."""
+    from jobos.docx_generator import _expand_paragraph
+
+    doc = Document()
+    para = doc.add_paragraph()
+    run = para.add_run("{{ skills }}")
+    run.bold = True
+    _expand_paragraph(para, ["Skill A", "Skill B"])
+    new_paras = [p for p in doc.paragraphs if p.text in ("Skill A", "Skill B")]
+    assert len(new_paras) == 2
+    for p in new_paras:
+        text_runs = [r for r in p.runs if r.text.strip()]
+        assert any(r.bold for r in text_runs)
+
+
+# ── Multiline replacement via _replace_in_doc ─────────────────────────────────
+
+def test_multiline_replacement_creates_separate_paragraphs(tmp_path):
+    """Multiline context values must produce separate paragraphs, not soft breaks."""
+    from jobos.docx_generator import _replace_in_doc
+
+    doc = Document()
+    doc.add_paragraph("Header")
+    doc.add_paragraph("{{ skills }}")
+    doc.add_paragraph("Footer")
+
+    _replace_in_doc(doc, {"skills": "• Python\n• SQL\n• Excel"})
+
+    texts = [p.text for p in doc.paragraphs]
+    assert "• Python" in texts
+    assert "• SQL" in texts
+    assert "• Excel" in texts
+    assert "{{ skills }}" not in texts
+    assert "Header" in texts
+    assert "Footer" in texts
+
+
+def test_single_line_replacement_stays_in_one_paragraph(tmp_path):
+    """Single-line context values must not expand into multiple paragraphs."""
+    from jobos.docx_generator import _replace_in_doc
+
+    doc = Document()
+    doc.add_paragraph("{{ name }}")
+    _replace_in_doc(doc, {"name": "Alice Smith"})
+    texts = [p.text for p in doc.paragraphs]
+    assert texts.count("Alice Smith") == 1
+
+
+# ── Table cell placeholder replacement ────────────────────────────────────────
+
+def test_placeholder_in_table_cell_is_replaced(tmp_path):
+    """Placeholders inside table cells must be filled."""
+    from jobos.docx_generator import _replace_in_doc
+
+    doc = Document()
+    table = doc.add_table(rows=2, cols=2)
+    table.cell(0, 0).paragraphs[0].add_run("{{ name }}")
+    table.cell(0, 1).paragraphs[0].add_run("Static text")
+    table.cell(1, 0).paragraphs[0].add_run("{{ role }}")
+
+    _replace_in_doc(doc, {"name": "Alice", "role": "Analyst"})
+
+    assert table.cell(0, 0).text == "Alice"
+    assert table.cell(0, 1).text == "Static text"
+    assert table.cell(1, 0).text == "Analyst"
+
+
+def test_multiline_in_table_cell_expands(tmp_path):
+    """Multiline values in table cells must expand into multiple paragraphs."""
+    from jobos.docx_generator import _replace_in_doc
+
+    doc = Document()
+    table = doc.add_table(rows=1, cols=1)
+    table.cell(0, 0).paragraphs[0].add_run("{{ skills }}")
+
+    _replace_in_doc(doc, {"skills": "• Skill A\n• Skill B"})
+
+    cell_texts = [p.text for p in table.cell(0, 0).paragraphs]
+    assert "• Skill A" in cell_texts
+    assert "• Skill B" in cell_texts
+
+
+# ── diagnose_template ──────────────────────────────────────────────────────────
+
+def test_diagnose_template_finds_body_placeholders(tmp_path):
+    from jobos.docx_generator import diagnose_template, CV_PLACEHOLDERS
+
+    doc = Document()
+    for ph in CV_PLACEHOLDERS:
+        doc.add_paragraph(f"{{{{ {ph} }}}}")
+    path = tmp_path / "cv.docx"
+    doc.save(str(path))
+
+    result = diagnose_template(path, CV_PLACEHOLDERS)
+    assert result["is_valid"] is True
+    assert result["missing"] == []
+    assert set(result["found_body"]) == set(CV_PLACEHOLDERS)
+    assert result["found_table"] == []
+
+
+def test_diagnose_template_finds_table_placeholders(tmp_path):
+    from jobos.docx_generator import diagnose_template
+
+    doc = Document()
+    table = doc.add_table(rows=1, cols=2)
+    table.cell(0, 0).paragraphs[0].add_run("{{ name }}")
+    table.cell(0, 1).paragraphs[0].add_run("{{ contact_line }}")
+    path = tmp_path / "table_cv.docx"
+    doc.save(str(path))
+
+    result = diagnose_template(path, ["name", "contact_line", "profile_summary"])
+    assert "name" in result["found_table"]
+    assert "contact_line" in result["found_table"]
+    assert "profile_summary" in result["missing"]
+    assert result["is_valid"] is False
+
+
+def test_diagnose_template_reports_all_missing(tmp_path):
+    from jobos.docx_generator import diagnose_template, CV_PLACEHOLDERS
+
+    doc = Document()
+    doc.add_paragraph("No placeholders here at all.")
+    path = tmp_path / "empty.docx"
+    doc.save(str(path))
+
+    result = diagnose_template(path, CV_PLACEHOLDERS)
+    assert result["is_valid"] is False
+    assert len(result["missing"]) == len(CV_PLACEHOLDERS)
+    assert result["all_found"] == []
+
+
+def test_diagnose_template_mixed_body_and_table(tmp_path):
+    from jobos.docx_generator import diagnose_template
+
+    doc = Document()
+    doc.add_paragraph("{{ name }}")
+    table = doc.add_table(rows=1, cols=1)
+    table.cell(0, 0).paragraphs[0].add_run("{{ role }}")
+    path = tmp_path / "mixed.docx"
+    doc.save(str(path))
+
+    result = diagnose_template(path, ["name", "role", "missing_one"])
+    assert "name" in result["found_body"]
+    assert "role" in result["found_table"]
+    assert "missing_one" in result["missing"]
+    assert result["is_valid"] is False
